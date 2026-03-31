@@ -1,0 +1,416 @@
+{
+  "FM-Z042202": {
+    "grain_product_id": 4038,
+    "grain_variant_id": 8408,
+    "grain_name": "Hard White Wheat Berries, Organic",
+    "lbs": 1
+  },
+  "FM-Z042202-5": {
+    "grain_product_id": 4038,
+    "grain_variant_id": 8409,
+    "grain_name": "Hard White Wheat Berries, Organic",
+    "lbs": 5
+  },
+  "FM-Z042202-10": {
+    "grain_product_id": 4038,
+    "grain_variant_id": 8410,
+    "grain_name": "Hard White Wheat Berries, Organic",
+    "lbs": 10
+  },
+  "FM-F577175": {
+    "grain_product_id": 4050,
+    "grain_variant_id": 8388,
+    "grain_name": "Soft White Winter Wheat, Organic",
+    "lbs": 1
+  },
+  "FM-F577175-5": {
+    "grain_product_id": 4050,
+    "grain_variant_id": 8389,
+    "grain_name": "Soft White Winter Wheat, Organic",
+    "lbs": 5
+  },
+  "FM-F577175-10": {
+    "grain_product_id": 4050,
+    "grain_variant_id": 8390,
+    "grain_name": "Soft White Winter Wheat, Organic",
+    "lbs": 10
+  },
+  "FM-H023409": {
+    "grain_product_id": 4051,
+    "grain_variant_id": 8392,
+    "grain_name": "Durum Wheat/ Semolina, Organic",
+    "lbs": 1
+  },
+  "FM-H023409-5": {
+    "grain_product_id": 4051,
+    "grain_variant_id": 8393,
+    "grain_name": "Durum Wheat/ Semolina, Organic",
+    "lbs": 5
+  },
+  "FM-H023409-10": {
+    "grain_product_id": 4051,
+    "grain_variant_id": 8394,
+    "grain_name": "Durum Wheat/ Semolina, Organic",
+    "lbs": 10
+  },
+  "FM-563399B": {
+    "grain_product_id": 4052,
+    "grain_variant_id": 8396,
+    "grain_name": "7 Grain Mix, Organic",
+    "lbs": 1
+  },
+  "FM-563399B-5": {
+    "grain_product_id": 4052,
+    "grain_variant_id": 8397,
+    "grain_name": "7 Grain Mix, Organic",
+    "lbs": 5
+  },
+  "FM-563399B-10": {
+    "grain_product_id": 4052,
+    "grain_variant_id": 8398,
+    "grain_name": "7 Grain Mix, Organic",
+    "lbs": 10
+  },
+  "FM-2228299": {
+    "grain_product_id": 4053,
+    "grain_variant_id": 8894,
+    "grain_name": "Kamut Wheat/ Khorasan, Organic",
+    "lbs": 1
+  },
+  "FM-2228299-5": {
+    "grain_product_id": 4053,
+    "grain_variant_id": 8895,
+    "grain_name": "Kamut Wheat/ Khorasan, Organic",
+    "lbs": 5
+  },
+  "FM-2228299-10": {
+    "grain_product_id": 4053,
+    "grain_variant_id": 8896,
+    "grain_name": "Kamut Wheat/ Khorasan, Organic",
+    "lbs": 10
+  },
+  "FM-D509918": {
+    "grain_product_id": 4054,
+    "grain_variant_id": 8404,
+    "grain_name": "Amaranth, Organic",
+    "lbs": 1
+  },
+  "FM-D509918-5": {
+    "grain_product_id": 4054,
+    "grain_variant_id": 8405,
+    "grain_name": "Amaranth, Organic",
+    "lbs": 5
+  },
+  "FM-D509918-10": {
+    "grain_product_id": 4054,
+    "grain_variant_id": 8406,
+    "grain_name": "Amaranth, Organic",
+    "lbs": 10
+  },
+  "FM-754217J": {
+    "grain_product_id": 4055,
+    "grain_variant_id": 8384,
+    "grain_name": "Hulled Barley Berries, Organic",
+    "lbs": 1
+  },
+  "FM-754217J-5": {
+    "grain_product_id": 4055,
+    "grain_variant_id": 8385,
+    "grain_name": "Hulled Barley Berries, Organic",
+    "lbs": 5
+  },
+  "FM-754217J-10": {
+    "grain_product_id": 4055,
+    "grain_variant_id": 8386,
+    "grain_name": "Hulled Barley Berries, Organic",
+    "lbs": 10
+  },
+  "FM-974842J": {
+    "grain_product_id": 4056,
+    "grain_variant_id": 8376,
+    "grain_name": "Black Emmer, Organic",
+    "lbs": 1
+  },
+  "FM-974842J-5": {
+    "grain_product_id": 4056,
+    "grain_variant_id": 8377,
+    "grain_name": "Black Emmer, Organic",
+    "lbs": 5
+  },
+  "FM-974842J-10": {
+    "grain_product_id": 4056,
+    "grain_variant_id": 8378,
+    "grain_name": "Black Emmer, Organic",
+    "lbs": 10
+  },
+  "FM-1827312": {
+    "grain_product_id": 4057,
+    "grain_variant_id": 8380,
+    "grain_name": "Hulled Buckwheat, Organic",
+    "lbs": 1
+  },
+  "FM-1827312-5": {
+    "grain_product_id": 4057,
+    "grain_variant_id": 8381,
+    "grain_name": "Hulled Buckwheat, Organic",
+    "lbs": 5
+  },
+  "FM-1827312-10": {
+    "grain_product_id": 4057,
+    "grain_variant_id": 8382,
+    "grain_name": "Hulled Buckwheat, Organic",
+    "lbs": 10
+  },
+  "FM-433903Z": {
+    "grain_product_id": 4058,
+    "grain_variant_id": 8372,
+    "grain_name": "Emmer, Organic",
+    "lbs": 1
+  },
+  "FM-433903Z-5": {
+    "grain_product_id": 4058,
+    "grain_variant_id": 8373,
+    "grain_name": "Emmer, Organic",
+    "lbs": 5
+  },
+  "FM-433903Z-10": {
+    "grain_product_id": 4058,
+    "grain_variant_id": 8374,
+    "grain_name": "Emmer, Organic",
+    "lbs": 10
+  },
+  "FM-513480R": {
+    "grain_product_id": 4059,
+    "grain_variant_id": 8368,
+    "grain_name": "Einkorn, Organic",
+    "lbs": 1
+  },
+  "FM-513480R-5": {
+    "grain_product_id": 4059,
+    "grain_variant_id": 8369,
+    "grain_name": "Einkorn, Organic",
+    "lbs": 5
+  },
+  "FM-513480R-10": {
+    "grain_product_id": 4059,
+    "grain_variant_id": 8370,
+    "grain_name": "Einkorn, Organic",
+    "lbs": 10
+  },
+  "FM-553439K": {
+    "grain_product_id": 4060,
+    "grain_variant_id": 8364,
+    "grain_name": "Sprouted Einkorn, Organic",
+    "lbs": 1
+  },
+  "FM-553439K-5": {
+    "grain_product_id": 4060,
+    "grain_variant_id": 8365,
+    "grain_name": "Sprouted Einkorn, Organic",
+    "lbs": 5
+  },
+  "FM-553439K-10": {
+    "grain_product_id": 4060,
+    "grain_variant_id": 8366,
+    "grain_name": "Sprouted Einkorn, Organic",
+    "lbs": 10
+  },
+  "FM-617442Z": {
+    "grain_product_id": 4061,
+    "grain_variant_id": 8360,
+    "grain_name": "Turkey Red, Ancient Hard Red Winter Wheat, Organic",
+    "lbs": 1
+  },
+  "FM-617442Z-5": {
+    "grain_product_id": 4061,
+    "grain_variant_id": 8361,
+    "grain_name": "Turkey Red, Ancient Hard Red Winter Wheat, Organic",
+    "lbs": 5
+  },
+  "FM-617442Z-10": {
+    "grain_product_id": 4061,
+    "grain_variant_id": 8362,
+    "grain_name": "Turkey Red, Ancient Hard Red Winter Wheat, Organic",
+    "lbs": 10
+  },
+  "FM-7709723": {
+    "grain_product_id": 4062,
+    "grain_variant_id": 8356,
+    "grain_name": "Hard Red Wheat Berries, Organic",
+    "lbs": 1
+  },
+  "FM-7709723-5": {
+    "grain_product_id": 4062,
+    "grain_variant_id": 8357,
+    "grain_name": "Hard Red Wheat Berries, Organic",
+    "lbs": 5
+  },
+  "FM-7709723-10": {
+    "grain_product_id": 4062,
+    "grain_variant_id": 8358,
+    "grain_name": "Hard Red Wheat Berries, Organic",
+    "lbs": 10
+  },
+  "FM-4063": {
+    "grain_product_id": 4063,
+    "grain_variant_id": 8352,
+    "grain_name": "Sprouted Hard Red Spring Wheat, Organic",
+    "lbs": 1
+  },
+  "FM-4063-5L": {
+    "grain_product_id": 4063,
+    "grain_variant_id": 8353,
+    "grain_name": "Sprouted Hard Red Spring Wheat, Organic",
+    "lbs": 5
+  },
+  "FM-4063-10": {
+    "grain_product_id": 4063,
+    "grain_variant_id": 8354,
+    "grain_name": "Sprouted Hard Red Spring Wheat, Organic",
+    "lbs": 10
+  },
+  "FM-4573489": {
+    "grain_product_id": 4064,
+    "grain_variant_id": 8348,
+    "grain_name": "Warthog, Hard Red Winter Wheat, Organic",
+    "lbs": 1
+  },
+  "FM-4573489-5": {
+    "grain_product_id": 4064,
+    "grain_variant_id": 8349,
+    "grain_name": "Warthog, Hard Red Winter Wheat, Organic",
+    "lbs": 5
+  },
+  "FM-4573489-10": {
+    "grain_product_id": 4064,
+    "grain_variant_id": 8350,
+    "grain_name": "Warthog, Hard Red Winter Wheat, Organic",
+    "lbs": 10
+  },
+  "FM-695305Z": {
+    "grain_product_id": 4065,
+    "grain_variant_id": 8344,
+    "grain_name": "Hulled Millet, Organic",
+    "lbs": 1
+  },
+  "FM-695305Z-5": {
+    "grain_product_id": 4065,
+    "grain_variant_id": 8345,
+    "grain_name": "Hulled Millet, Organic",
+    "lbs": 5
+  },
+  "FM-695305Z-10": {
+    "grain_product_id": 4065,
+    "grain_variant_id": 8346,
+    "grain_name": "Hulled Millet, Organic",
+    "lbs": 10
+  },
+  "FM-T945006": {
+    "grain_product_id": 4067,
+    "grain_variant_id": 8336,
+    "grain_name": "Pearled Barley, Organic",
+    "lbs": 1
+  },
+  "FM-T945006-5": {
+    "grain_product_id": 4067,
+    "grain_variant_id": 8337,
+    "grain_name": "Pearled Barley, Organic",
+    "lbs": 5
+  },
+  "FM-T945006-10": {
+    "grain_product_id": 4067,
+    "grain_variant_id": 8338,
+    "grain_name": "Pearled Barley, Organic",
+    "lbs": 10
+  },
+  "FM-A819863": {
+    "grain_product_id": 4068,
+    "grain_variant_id": 8332,
+    "grain_name": "Rye Berries, Organic",
+    "lbs": 1
+  },
+  "FM-A819863-5": {
+    "grain_product_id": 4068,
+    "grain_variant_id": 8333,
+    "grain_name": "Rye Berries, Organic",
+    "lbs": 5
+  },
+  "FM-A819863-10": {
+    "grain_product_id": 4068,
+    "grain_variant_id": 8334,
+    "grain_name": "Rye Berries, Organic",
+    "lbs": 10
+  },
+  "FM-299944Q": {
+    "grain_product_id": 4070,
+    "grain_variant_id": 8328,
+    "grain_name": "Sprouted Spelt Berries, Organic",
+    "lbs": 1
+  },
+  "FM-299944Q-5": {
+    "grain_product_id": 4070,
+    "grain_variant_id": 8329,
+    "grain_name": "Sprouted Spelt Berries, Organic",
+    "lbs": 5
+  },
+  "FM-299944Q-10": {
+    "grain_product_id": 4070,
+    "grain_variant_id": 8330,
+    "grain_name": "Sprouted Spelt Berries, Organic",
+    "lbs": 10
+  },
+  "FM-6957315": {
+    "grain_product_id": 4071,
+    "grain_variant_id": 8423,
+    "grain_name": "Sorghum, Organic",
+    "lbs": 1
+  },
+  "FM-6957315-5": {
+    "grain_product_id": 4071,
+    "grain_variant_id": 8424,
+    "grain_name": "Sorghum, Organic",
+    "lbs": 5
+  },
+  "FM-6957315-10": {
+    "grain_product_id": 4071,
+    "grain_variant_id": 8425,
+    "grain_name": "Sorghum, Organic",
+    "lbs": 10
+  },
+  "FM-496366P": {
+    "grain_product_id": 4073,
+    "grain_variant_id": 8320,
+    "grain_name": "Spelt, Organic",
+    "lbs": 1
+  },
+  "FM-496366P-5": {
+    "grain_product_id": 4073,
+    "grain_variant_id": 8321,
+    "grain_name": "Spelt, Organic",
+    "lbs": 5
+  },
+  "FM-496366P-10": {
+    "grain_product_id": 4073,
+    "grain_variant_id": 8322,
+    "grain_name": "Spelt, Organic",
+    "lbs": 10
+  },
+  "FM-G741868": {
+    "grain_product_id": 4074,
+    "grain_variant_id": 8427,
+    "grain_name": "Sprouted Rye Berries, Organic",
+    "lbs": 1
+  },
+  "FM-G741868-5": {
+    "grain_product_id": 4074,
+    "grain_variant_id": 8428,
+    "grain_name": "Sprouted Rye Berries, Organic",
+    "lbs": 5
+  },
+  "FM-G741868-10": {
+    "grain_product_id": 4074,
+    "grain_variant_id": 8429,
+    "grain_name": "Sprouted Rye Berries, Organic",
+    "lbs": 10
+  }
+}

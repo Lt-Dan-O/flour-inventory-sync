@@ -1,0 +1,1097 @@
+{
+  "Z042202": {
+    "name": "Hard White Wheat Berries, Organic",
+    "square_variation_id": "6LNO7YHQXMXPTQT35URT6PAS",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4038,
+      "variants": {
+        "1": {
+          "variant_id": 8408,
+          "sku": "Z042202"
+        },
+        "5": {
+          "variant_id": 8409,
+          "sku": "Z042202-5"
+        },
+        "10": {
+          "variant_id": 8410,
+          "sku": "Z042202-10"
+        },
+        "25": {
+          "variant_id": 8411,
+          "sku": "Z042202-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4038,
+          "bc_variant_id": 8408,
+          "sku": "FM-Z042202"
+        },
+        "5": {
+          "bc_product_id": 4038,
+          "bc_variant_id": 8409,
+          "sku": "FM-Z042202-5"
+        },
+        "10": {
+          "bc_product_id": 4038,
+          "bc_variant_id": 8410,
+          "sku": "FM-Z042202-10"
+        }
+      }
+    }
+  },
+  "F577175": {
+    "name": "Soft White Winter Wheat, Organic",
+    "square_variation_id": "KCPPYTCRTLRM6T7NVGMTZNC3",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4050,
+      "variants": {
+        "1": {
+          "variant_id": 8388,
+          "sku": "F577175"
+        },
+        "5": {
+          "variant_id": 8389,
+          "sku": "F577175-5"
+        },
+        "10": {
+          "variant_id": 8390,
+          "sku": "F577175-10"
+        },
+        "25": {
+          "variant_id": 8391,
+          "sku": "F577175-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4050,
+          "bc_variant_id": 8388,
+          "sku": "FM-F577175"
+        },
+        "5": {
+          "bc_product_id": 4050,
+          "bc_variant_id": 8389,
+          "sku": "FM-F577175-5"
+        },
+        "10": {
+          "bc_product_id": 4050,
+          "bc_variant_id": 8390,
+          "sku": "FM-F577175-10"
+        }
+      }
+    }
+  },
+  "H023409": {
+    "name": "Durum Wheat/ Semolina, Organic",
+    "square_variation_id": "AEL37AW37XTRPE6C62QIVDPC",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4051,
+      "variants": {
+        "1": {
+          "variant_id": 8392,
+          "sku": "H023409"
+        },
+        "5": {
+          "variant_id": 8393,
+          "sku": "H023409-5"
+        },
+        "10": {
+          "variant_id": 8394,
+          "sku": "H023409-10"
+        },
+        "25": {
+          "variant_id": 8395,
+          "sku": "H023409-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4051,
+          "bc_variant_id": 8392,
+          "sku": "FM-H023409"
+        },
+        "5": {
+          "bc_product_id": 4051,
+          "bc_variant_id": 8393,
+          "sku": "FM-H023409-5"
+        },
+        "10": {
+          "bc_product_id": 4051,
+          "bc_variant_id": 8394,
+          "sku": "FM-H023409-10"
+        }
+      }
+    }
+  },
+  "563399B": {
+    "name": "7 Grain Mix, Organic",
+    "square_variation_id": "GFYC6NYXHEBQW34NAK2AJJTQ",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4052,
+      "variants": {
+        "1": {
+          "variant_id": 8396,
+          "sku": "563399B"
+        },
+        "5": {
+          "variant_id": 8397,
+          "sku": "563399B-5"
+        },
+        "10": {
+          "variant_id": 8398,
+          "sku": "563399B-10"
+        },
+        "25": {
+          "variant_id": 8399,
+          "sku": "563399B-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4052,
+          "bc_variant_id": 8396,
+          "sku": "FM-563399B"
+        },
+        "5": {
+          "bc_product_id": 4052,
+          "bc_variant_id": 8397,
+          "sku": "FM-563399B-5"
+        },
+        "10": {
+          "bc_product_id": 4052,
+          "bc_variant_id": 8398,
+          "sku": "FM-563399B-10"
+        }
+      }
+    }
+  },
+  "2228299": {
+    "name": "Kamut Wheat/ Khorasan, Organic",
+    "square_variation_id": "C4YN2RMDWJQK6QQPZIF6XTAW",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4053,
+      "variants": {
+        "1": {
+          "variant_id": 8894,
+          "sku": "2228299"
+        },
+        "5": {
+          "variant_id": 8895,
+          "sku": "2228299-5"
+        },
+        "10": {
+          "variant_id": 8896,
+          "sku": "2228299-10"
+        },
+        "25": {
+          "variant_id": 8897,
+          "sku": "2228299-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4053,
+          "bc_variant_id": 8894,
+          "sku": "FM-2228299"
+        },
+        "5": {
+          "bc_product_id": 4053,
+          "bc_variant_id": 8895,
+          "sku": "FM-2228299-5"
+        },
+        "10": {
+          "bc_product_id": 4053,
+          "bc_variant_id": 8896,
+          "sku": "FM-2228299-10"
+        }
+      }
+    }
+  },
+  "D509918": {
+    "name": "Amaranth, Organic",
+    "square_variation_id": "HMBJKM6QECGN3I3OKFA6GGPE",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4054,
+      "variants": {
+        "1": {
+          "variant_id": 8404,
+          "sku": "D509918"
+        },
+        "5": {
+          "variant_id": 8405,
+          "sku": "D509918-5"
+        },
+        "10": {
+          "variant_id": 8406,
+          "sku": "D509918-10"
+        },
+        "25": {
+          "variant_id": 8407,
+          "sku": "D509918-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4054,
+          "bc_variant_id": 8404,
+          "sku": "FM-D509918"
+        },
+        "5": {
+          "bc_product_id": 4054,
+          "bc_variant_id": 8405,
+          "sku": "FM-D509918-5"
+        },
+        "10": {
+          "bc_product_id": 4054,
+          "bc_variant_id": 8406,
+          "sku": "FM-D509918-10"
+        }
+      }
+    }
+  },
+  "754217J": {
+    "name": "Hulled Barley Berries, Organic",
+    "square_variation_id": "VQPH7ITJA5I5G3PC2ML7YBS6",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4055,
+      "variants": {
+        "1": {
+          "variant_id": 8384,
+          "sku": "754217J"
+        },
+        "5": {
+          "variant_id": 8385,
+          "sku": "754217J-5"
+        },
+        "10": {
+          "variant_id": 8386,
+          "sku": "754217J-10"
+        },
+        "25": {
+          "variant_id": 8387,
+          "sku": "754217J-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4055,
+          "bc_variant_id": 8384,
+          "sku": "FM-754217J"
+        },
+        "5": {
+          "bc_product_id": 4055,
+          "bc_variant_id": 8385,
+          "sku": "FM-754217J-5"
+        },
+        "10": {
+          "bc_product_id": 4055,
+          "bc_variant_id": 8386,
+          "sku": "FM-754217J-10"
+        }
+      }
+    }
+  },
+  "974842J": {
+    "name": "Black Emmer, Organic",
+    "square_variation_id": "FVLJJHV4Q6FZYYPUQRQNFJYJ",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4056,
+      "variants": {
+        "1": {
+          "variant_id": 8376,
+          "sku": "974842J"
+        },
+        "5": {
+          "variant_id": 8377,
+          "sku": "974842J-5"
+        },
+        "10": {
+          "variant_id": 8378,
+          "sku": "974842J-10"
+        },
+        "25": {
+          "variant_id": 8379,
+          "sku": "974842J-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4056,
+          "bc_variant_id": 8376,
+          "sku": "FM-974842J"
+        },
+        "5": {
+          "bc_product_id": 4056,
+          "bc_variant_id": 8377,
+          "sku": "FM-974842J-5"
+        },
+        "10": {
+          "bc_product_id": 4056,
+          "bc_variant_id": 8378,
+          "sku": "FM-974842J-10"
+        }
+      }
+    }
+  },
+  "1827312": {
+    "name": "Hulled Buckwheat, Organic",
+    "square_variation_id": "KM6BVAJ2FFIPTKS6AXT4X7U3",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4057,
+      "variants": {
+        "1": {
+          "variant_id": 8380,
+          "sku": "1827312"
+        },
+        "5": {
+          "variant_id": 8381,
+          "sku": "1827312-5"
+        },
+        "10": {
+          "variant_id": 8382,
+          "sku": "1827312-10"
+        },
+        "25": {
+          "variant_id": 8383,
+          "sku": "1827312-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4057,
+          "bc_variant_id": 8380,
+          "sku": "FM-1827312"
+        },
+        "5": {
+          "bc_product_id": 4057,
+          "bc_variant_id": 8381,
+          "sku": "FM-1827312-5"
+        },
+        "10": {
+          "bc_product_id": 4057,
+          "bc_variant_id": 8382,
+          "sku": "FM-1827312-10"
+        }
+      }
+    }
+  },
+  "433903Z": {
+    "name": "Emmer, Organic",
+    "square_variation_id": "4VFB6M2JWQJCHKNWGD2DJFRT",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4058,
+      "variants": {
+        "1": {
+          "variant_id": 8372,
+          "sku": "433903Z"
+        },
+        "5": {
+          "variant_id": 8373,
+          "sku": "433903Z-5"
+        },
+        "10": {
+          "variant_id": 8374,
+          "sku": "433903Z-10"
+        },
+        "25": {
+          "variant_id": 8375,
+          "sku": "433903Z-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4058,
+          "bc_variant_id": 8372,
+          "sku": "FM-433903Z"
+        },
+        "5": {
+          "bc_product_id": 4058,
+          "bc_variant_id": 8373,
+          "sku": "FM-433903Z-5"
+        },
+        "10": {
+          "bc_product_id": 4058,
+          "bc_variant_id": 8374,
+          "sku": "FM-433903Z-10"
+        }
+      }
+    }
+  },
+  "513480R": {
+    "name": "Einkorn, Organic",
+    "square_variation_id": "RIYWOIEQ4INEW3BFOCLIHFB3",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4059,
+      "variants": {
+        "1": {
+          "variant_id": 8368,
+          "sku": "513480R"
+        },
+        "5": {
+          "variant_id": 8369,
+          "sku": "513480R-5"
+        },
+        "10": {
+          "variant_id": 8370,
+          "sku": "513480R-10"
+        },
+        "25": {
+          "variant_id": 8371,
+          "sku": "513480R-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4059,
+          "bc_variant_id": 8368,
+          "sku": "FM-513480R"
+        },
+        "5": {
+          "bc_product_id": 4059,
+          "bc_variant_id": 8369,
+          "sku": "FM-513480R-5"
+        },
+        "10": {
+          "bc_product_id": 4059,
+          "bc_variant_id": 8370,
+          "sku": "FM-513480R-10"
+        }
+      }
+    }
+  },
+  "553439K": {
+    "name": "Sprouted Einkorn, Organic",
+    "square_variation_id": "WTX44IC7S5BGCZXHTRRX4FBO",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4060,
+      "variants": {
+        "1": {
+          "variant_id": 8364,
+          "sku": "553439K"
+        },
+        "5": {
+          "variant_id": 8365,
+          "sku": "553439K-5"
+        },
+        "10": {
+          "variant_id": 8366,
+          "sku": "553439K-10"
+        },
+        "25": {
+          "variant_id": 8367,
+          "sku": "553439K-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4060,
+          "bc_variant_id": 8364,
+          "sku": "FM-553439K"
+        },
+        "5": {
+          "bc_product_id": 4060,
+          "bc_variant_id": 8365,
+          "sku": "FM-553439K-5"
+        },
+        "10": {
+          "bc_product_id": 4060,
+          "bc_variant_id": 8366,
+          "sku": "FM-553439K-10"
+        }
+      }
+    }
+  },
+  "617442Z": {
+    "name": "Turkey Red, Ancient Hard Red Winter Wheat, Organic",
+    "square_variation_id": "2BEG552KETKFXA6AT2Y7ZDPB",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4061,
+      "variants": {
+        "1": {
+          "variant_id": 8360,
+          "sku": "617442Z"
+        },
+        "5": {
+          "variant_id": 8361,
+          "sku": "617442Z-5"
+        },
+        "10": {
+          "variant_id": 8362,
+          "sku": "617442Z-10"
+        },
+        "25": {
+          "variant_id": 8363,
+          "sku": "617442Z-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4061,
+          "bc_variant_id": 8360,
+          "sku": "FM-617442Z"
+        },
+        "5": {
+          "bc_product_id": 4061,
+          "bc_variant_id": 8361,
+          "sku": "FM-617442Z-5"
+        },
+        "10": {
+          "bc_product_id": 4061,
+          "bc_variant_id": 8362,
+          "sku": "FM-617442Z-10"
+        }
+      }
+    }
+  },
+  "7709723": {
+    "name": "Hard Red Wheat Berries, Organic",
+    "square_variation_id": "CS646BSCAW56BYNQWOP4PO3E",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4062,
+      "variants": {
+        "1": {
+          "variant_id": 8356,
+          "sku": "7709723"
+        },
+        "5": {
+          "variant_id": 8357,
+          "sku": "7709723-5"
+        },
+        "10": {
+          "variant_id": 8358,
+          "sku": "7709723-10"
+        },
+        "25": {
+          "variant_id": 8359,
+          "sku": "7709723-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4062,
+          "bc_variant_id": 8356,
+          "sku": "FM-7709723"
+        },
+        "5": {
+          "bc_product_id": 4062,
+          "bc_variant_id": 8357,
+          "sku": "FM-7709723-5"
+        },
+        "10": {
+          "bc_product_id": 4062,
+          "bc_variant_id": 8358,
+          "sku": "FM-7709723-10"
+        }
+      }
+    }
+  },
+  "4063": {
+    "name": "Sprouted Hard Red Spring Wheat, Organic",
+    "square_variation_id": "PBNYX2QNEOENIVVKLP2RGMCP",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4063,
+      "variants": {
+        "1": {
+          "variant_id": 8352,
+          "sku": "4063"
+        },
+        "5": {
+          "variant_id": 8353,
+          "sku": "4063-5"
+        },
+        "10": {
+          "variant_id": 8354,
+          "sku": "4063-10"
+        },
+        "25": {
+          "variant_id": 8355,
+          "sku": "4063-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4063,
+          "bc_variant_id": 8352,
+          "sku": "FM-4063"
+        },
+        "5": {
+          "bc_product_id": 4063,
+          "bc_variant_id": 8353,
+          "sku": "FM-4063-5L"
+        },
+        "10": {
+          "bc_product_id": 4063,
+          "bc_variant_id": 8354,
+          "sku": "FM-4063-10"
+        }
+      }
+    }
+  },
+  "4573489": {
+    "name": "Warthog, Hard Red Winter Wheat, Organic",
+    "square_variation_id": "HH3KMOSQRZXL7NEDRYCJLNVT",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4064,
+      "variants": {
+        "1": {
+          "variant_id": 8348,
+          "sku": "4573489"
+        },
+        "5": {
+          "variant_id": 8349,
+          "sku": "4573489-5"
+        },
+        "10": {
+          "variant_id": 8350,
+          "sku": "4573489-10"
+        },
+        "25": {
+          "variant_id": 8351,
+          "sku": "4573489-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4064,
+          "bc_variant_id": 8348,
+          "sku": "FM-4573489"
+        },
+        "5": {
+          "bc_product_id": 4064,
+          "bc_variant_id": 8349,
+          "sku": "FM-4573489-5"
+        },
+        "10": {
+          "bc_product_id": 4064,
+          "bc_variant_id": 8350,
+          "sku": "FM-4573489-10"
+        }
+      }
+    }
+  },
+  "695305Z": {
+    "name": "Hulled Millet, Organic",
+    "square_variation_id": "HMEBT2LC3LC4WMSQ2YJ457F4",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4065,
+      "variants": {
+        "1": {
+          "variant_id": 8344,
+          "sku": "695305Z"
+        },
+        "5": {
+          "variant_id": 8345,
+          "sku": "695305Z-5"
+        },
+        "10": {
+          "variant_id": 8346,
+          "sku": "695305Z-10"
+        },
+        "25": {
+          "variant_id": 8347,
+          "sku": "695305Z-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4065,
+          "bc_variant_id": 8344,
+          "sku": "FM-695305Z"
+        },
+        "5": {
+          "bc_product_id": 4065,
+          "bc_variant_id": 8345,
+          "sku": "FM-695305Z-5"
+        },
+        "10": {
+          "bc_product_id": 4065,
+          "bc_variant_id": 8346,
+          "sku": "FM-695305Z-10"
+        }
+      }
+    }
+  },
+  "T945006": {
+    "name": "Pearled Barley, Organic",
+    "square_variation_id": "WVG3YSFIPOU4DWDFWED3SITO",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4067,
+      "variants": {
+        "1": {
+          "variant_id": 8336,
+          "sku": "T945006"
+        },
+        "5": {
+          "variant_id": 8337,
+          "sku": "T945006-5"
+        },
+        "10": {
+          "variant_id": 8338,
+          "sku": "T945006-10"
+        },
+        "25": {
+          "variant_id": 8339,
+          "sku": "T945006-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4067,
+          "bc_variant_id": 8336,
+          "sku": "FM-T945006"
+        },
+        "5": {
+          "bc_product_id": 4067,
+          "bc_variant_id": 8337,
+          "sku": "FM-T945006-5"
+        },
+        "10": {
+          "bc_product_id": 4067,
+          "bc_variant_id": 8338,
+          "sku": "FM-T945006-10"
+        }
+      }
+    }
+  },
+  "A819863": {
+    "name": "Rye Berries, Organic",
+    "square_variation_id": "GKIZGHIFLU33M45J6QRXWDJP",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4068,
+      "variants": {
+        "1": {
+          "variant_id": 8332,
+          "sku": "A819863"
+        },
+        "5": {
+          "variant_id": 8333,
+          "sku": "A819863-5"
+        },
+        "10": {
+          "variant_id": 8334,
+          "sku": "A819863-10"
+        },
+        "25": {
+          "variant_id": 8335,
+          "sku": "A819863-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4068,
+          "bc_variant_id": 8332,
+          "sku": "FM-A819863"
+        },
+        "5": {
+          "bc_product_id": 4068,
+          "bc_variant_id": 8333,
+          "sku": "FM-A819863-5"
+        },
+        "10": {
+          "bc_product_id": 4068,
+          "bc_variant_id": 8334,
+          "sku": "FM-A819863-10"
+        }
+      }
+    }
+  },
+  "299944Q": {
+    "name": "Sprouted Spelt Berries, Organic",
+    "square_variation_id": "BAPIU3S6H4CDIGEPV4AZ3XQS",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4070,
+      "variants": {
+        "1": {
+          "variant_id": 8328,
+          "sku": "299944Q"
+        },
+        "5": {
+          "variant_id": 8329,
+          "sku": "299944Q-5"
+        },
+        "10": {
+          "variant_id": 8330,
+          "sku": "299944Q-10"
+        },
+        "25": {
+          "variant_id": 8331,
+          "sku": "299944Q-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4070,
+          "bc_variant_id": 8328,
+          "sku": "FM-299944Q"
+        },
+        "5": {
+          "bc_product_id": 4070,
+          "bc_variant_id": 8329,
+          "sku": "FM-299944Q-5"
+        },
+        "10": {
+          "bc_product_id": 4070,
+          "bc_variant_id": 8330,
+          "sku": "FM-299944Q-10"
+        }
+      }
+    }
+  },
+  "6957315": {
+    "name": "Sorghum, Organic",
+    "square_variation_id": "KZD6IWUSDYPPW3PZ4GJOWH5X",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4071,
+      "variants": {
+        "1": {
+          "variant_id": 8423,
+          "sku": "6957315"
+        },
+        "5": {
+          "variant_id": 8424,
+          "sku": "6957315-5"
+        },
+        "10": {
+          "variant_id": 8425,
+          "sku": "6957315-10"
+        },
+        "25": {
+          "variant_id": 8426,
+          "sku": "6957315-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4071,
+          "bc_variant_id": 8423,
+          "sku": "FM-6957315"
+        },
+        "5": {
+          "bc_product_id": 4071,
+          "bc_variant_id": 8424,
+          "sku": "FM-6957315-5"
+        },
+        "10": {
+          "bc_product_id": 4071,
+          "bc_variant_id": 8425,
+          "sku": "FM-6957315-10"
+        }
+      }
+    }
+  },
+  "496366P": {
+    "name": "Spelt, Organic",
+    "square_variation_id": "RYQ4WTYZEW33LPABPYJMIM57",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4073,
+      "variants": {
+        "1": {
+          "variant_id": 8320,
+          "sku": "496366P"
+        },
+        "5": {
+          "variant_id": 8321,
+          "sku": "496366P-5"
+        },
+        "10": {
+          "variant_id": 8322,
+          "sku": "496366P-10"
+        },
+        "25": {
+          "variant_id": 8323,
+          "sku": "496366P-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4073,
+          "bc_variant_id": 8320,
+          "sku": "FM-496366P"
+        },
+        "5": {
+          "bc_product_id": 4073,
+          "bc_variant_id": 8321,
+          "sku": "FM-496366P-5"
+        },
+        "10": {
+          "bc_product_id": 4073,
+          "bc_variant_id": 8322,
+          "sku": "FM-496366P-10"
+        }
+      }
+    }
+  },
+  "G741868": {
+    "name": "Sprouted Rye Berries, Organic",
+    "square_variation_id": "2AXSMLPT7R3KFHYGKCMSXXAW",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4074,
+      "variants": {
+        "1": {
+          "variant_id": 8427,
+          "sku": "G741868"
+        },
+        "5": {
+          "variant_id": 8428,
+          "sku": "G741868-5"
+        },
+        "10": {
+          "variant_id": 8429,
+          "sku": "G741868-10"
+        },
+        "25": {
+          "variant_id": 8430,
+          "sku": "G741868-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4074,
+          "bc_variant_id": 8427,
+          "sku": "FM-G741868"
+        },
+        "5": {
+          "bc_product_id": 4074,
+          "bc_variant_id": 8428,
+          "sku": "FM-G741868-5"
+        },
+        "10": {
+          "bc_product_id": 4074,
+          "bc_variant_id": 8429,
+          "sku": "FM-G741868-10"
+        }
+      }
+    }
+  },
+  "R932264": {
+    "name": "Soybean, Organic",
+    "square_variation_id": "TB2YMXUGIRBBVZILTKOBTRML",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4072,
+      "variants": {
+        "1": {
+          "variant_id": 8324,
+          "sku": "R932264"
+        },
+        "5": {
+          "variant_id": 8325,
+          "sku": "R932264-5"
+        },
+        "10": {
+          "variant_id": 8326,
+          "sku": "R932264-10"
+        },
+        "25": {
+          "variant_id": 8327,
+          "sku": "R932264-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {}
+    },
+    "flour_excluded": true
+  },
+  "4024291": {
+    "name": "Oats, Organic",
+    "square_variation_id": "6TYIQOQH6XBMZFFLZQRFVCPA",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4066,
+      "variants": {
+        "1": {
+          "variant_id": 8340,
+          "sku": "4024291"
+        },
+        "5": {
+          "variant_id": 8341,
+          "sku": "4024291-5"
+        },
+        "10": {
+          "variant_id": 8342,
+          "sku": "4024291-10"
+        },
+        "25": {
+          "variant_id": 8343,
+          "sku": "4024291-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {}
+    },
+    "flour_excluded": true
+  }
+}
