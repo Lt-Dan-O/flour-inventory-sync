@@ -211,7 +211,7 @@ function sqHeaders() {
 
 /** Get current inventory count for a Square variation (per-lb = total pounds) */
 async function getSquareCount(variationId) {
-  const MAX_RETRIES = 2;
+  const MAX_RETRIES = 4;
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     const res = await fetch(`${SQ_API}/inventory/batch-retrieve-counts`, {
       method: 'POST',
@@ -236,10 +236,41 @@ async function getSquareCount(variationId) {
       return Math.floor(parseFloat(matchedCount.quantity)) || 0;
     }
 
-    // Mismatch — API returned wrong data
-    console.warn(`getSquareCount: attempt ${attempt}/${MAX_RETRIES} mismatch for ${variationId}, got ${data.counts.length} unrelated counts`);
+    // API returned unfiltered results — page through them to find our item
+    if (data.cursor) {
+      console.warn(`getSquareCount: attempt ${attempt} got ${data.counts.length} unfiltered counts for ${variationId}, paging through...`);
+      let cursor = data.cursor;
+      let pageNum = 2;
+      while (cursor && pageNum <= 20) { // safety cap at 20 pages
+        const pageRes = await fetch(`${SQ_API}/inventory/batch-retrieve-counts`, {
+          method: 'POST',
+          headers: sqHeaders(),
+          body: JSON.stringify({
+            catalog_object_ids: [variationId],
+            location_ids: [SQ_LOCATION_ID],
+            states: ['IN_STOCK'],
+            cursor
+          })
+        });
+        if (!pageRes.ok) break;
+        const pageData = await pageRes.json();
+        if (pageData.counts) {
+          const found = pageData.counts.find(c => c.catalog_object_id === variationId);
+          if (found) {
+            console.log(`getSquareCount: found ${variationId} on page ${pageNum} with qty ${found.quantity}`);
+            return Math.floor(parseFloat(found.quantity)) || 0;
+          }
+        }
+        cursor = pageData.cursor;
+        pageNum++;
+      }
+    }
+
+    // Mismatch — API returned wrong data, retry with exponential backoff
+    const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000); // 1s, 2s, 4s, 8s
+    console.warn(`getSquareCount: attempt ${attempt}/${MAX_RETRIES} mismatch for ${variationId}, got ${data.counts.length} unrelated counts, retrying in ${delay}ms`);
     if (attempt < MAX_RETRIES) {
-      await new Promise(r => setTimeout(r, 1000)); // wait 1s before retry
+      await new Promise(r => setTimeout(r, delay));
     }
   }
   // All retries returned mismatched data — return 0 to avoid wrong inventory
