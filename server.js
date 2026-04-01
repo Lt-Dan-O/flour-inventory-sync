@@ -437,6 +437,38 @@ app.get('/reconcile', async (req, res) => {
   fullReconciliation();
 });
 
+
+// ── Debug endpoint: raw Square inventory response ──────────────────────────
+app.get('/debug/square-count/:variationId', async (req, res) => {
+  try {
+    const variationId = req.params.variationId;
+    const apiRes = await fetch(`${SQ_API}/inventory/batch-retrieve-counts`, {
+      method: 'POST',
+      headers: sqHeaders(),
+      body: JSON.stringify({
+        catalog_object_ids: [variationId],
+        location_ids: [SQ_LOCATION_ID],
+        states: ['IN_STOCK']
+      })
+    });
+    const status = apiRes.status;
+    const rawText = await apiRes.text();
+    let parsed;
+    try { parsed = JSON.parse(rawText); } catch { parsed = null; }
+    res.json({
+      requested_variation_id: variationId,
+      location_id: SQ_LOCATION_ID,
+      sq_token_prefix: SQ_ACCESS_TOKEN ? SQ_ACCESS_TOKEN.substring(0, 10) + '...' : 'NOT SET',
+      http_status: status,
+      raw_response: parsed || rawText,
+      parsed_quantity: parsed?.counts?.[0]?.quantity || null,
+      final_value: parsed?.counts?.[0] ? Math.floor(parseFloat(parsed.counts[0].quantity)) : 0
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── Health check ────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
   const flourCount = Object.values(bcVariantToGrain).filter(v => v.type === 'flour').length;
