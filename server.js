@@ -600,10 +600,21 @@ async function fullReconciliation() {
     let processed = 0;
     let errors = 0;
 
+    // Track items that got 0 from Square (potential API failures)
+    const zeroItems = [];
+
     for (const grainSku of Object.keys(grainMapping)) {
       try {
+        const entry = grainMapping[grainSku];
+        const sqCount = bulkCounts.has(entry.square_variation_id)
+          ? bulkCounts.get(entry.square_variation_id)
+          : null;
         await recalculateGrain(grainSku, { reservedMap, bulkCounts });
         processed++;
+        // Track items where Square returned 0 or was missing from bulk
+        if (sqCount === null || sqCount === 0) {
+          zeroItems.push(grainSku);
+        }
       } catch (e) {
         console.error(`  ERROR reconciling ${grainSku}: ${e.message}`);
         errors++;
@@ -613,7 +624,67 @@ async function fullReconciliation() {
       await new Promise(r => setTimeout(r, 500));
     }
 
-    console.log(`\nReconciliation complete: ${processed} OK, ${errors} errors\n`);
+    console.log(`\nReconciliation pass 1 complete: ${processed} OK, ${errors} errors`);
+
+    // Deferred retry pass: re-fetch items that got 0 from Square
+    // Wait for the API to recover from the "1000 unfiltered counts" degraded state
+    if (zeroItems.length > 0) {
+      console.log(`\n--- Deferred retry: ${zeroItems.length} items had Square=0, waiting 45s for API recovery ---`);
+      await new Promise(r => setTimeout(r, 45000));
+
+      let retryFixed = 0;
+      for (const grainSku of zeroItems) {
+        const entry = grainMapping[grainSku];
+        try {
+          // Single isolated API call with fresh state
+          const res = await fetch(`${SQ_API}/inventory/batch-retrieve-counts`, {
+            method: 'POST',
+            headers: sqHeaders(),
+            body: JSON.stringify({
+              catalog_object_ids: [entry.square_variation_id],
+              location_ids: [SQ_LOCATION_ID],
+              states: ['IN_STOCK']
+            })
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            if (data.counts && data.counts.length > 0) {
+              const match = data.counts.find(c => c.catalog_object_id === entry.square_variation_id);
+              if (match) {
+                const qty = Math.floor(parseFloat(match.quantity)) || 0;
+                if (qty > 0) {
+                  console.log(`  Deferred retry: ${entry.name} recovered Square=${qty} lbs`);
+                  // Re-run recalculation with the correct count
+                  const fixedCounts = new Map([[entry.square_variation_id, qty]]);
+                  await recalculateGrain(grainSku, { reservedMap, bulkCounts: fixedCounts });
+                  retryFixed++;
+                } else {
+                  console.log(`  Deferred retry: ${entry.name} still 0 (genuinely zero stock)`);
+                }
+              } else if (data.counts.length > 10) {
+                console.log(`  Deferred retry: ${entry.name} got ${data.counts.length} unfiltered counts (API still degraded)`);
+              } else {
+                console.log(`  Deferred retry: ${entry.name} no matching count in response`);
+              }
+            } else {
+              console.log(`  Deferred retry: ${entry.name} empty response (genuinely zero stock)`);
+            }
+          } else {
+            console.log(`  Deferred retry: ${entry.name} API error ${res.status}`);
+          }
+        } catch (e) {
+          console.error(`  Deferred retry error for ${entry.name}: ${e.message}`);
+        }
+
+        // Long delay between each retry to keep API calm
+        await new Promise(r => setTimeout(r, 5000));
+      }
+
+      console.log(`Deferred retry complete: ${retryFixed}/${zeroItems.length} items recovered\n`);
+    } else {
+      console.log(`All items had non-zero Square counts - no deferred retry needed\n`);
+    }
   } catch (e) {
     console.error(`Fatal reconciliation error: ${e.message}`);
   }
