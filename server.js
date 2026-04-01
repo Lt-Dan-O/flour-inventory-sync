@@ -226,7 +226,13 @@ async function getSquareCount(variationId) {
   }
   const data = await res.json();
   if (!data.counts || data.counts.length === 0) return 0;
-  return Math.floor(parseFloat(data.counts[0].quantity)) || 0;
+  // Validate response is for the requested variation (defensive check)
+  const matchedCount = data.counts.find(c => c.catalog_object_id === variationId);
+  if (!matchedCount) {
+    console.warn('getSquareCount: response mismatch! requested=' + variationId + ' got=' + JSON.stringify(data.counts.map(c => ({id: c.catalog_object_id, qty: c.quantity}))));
+    return Math.floor(parseFloat(data.counts[0].quantity)) || 0;
+  }
+  return Math.floor(parseFloat(matchedCount.quantity)) || 0;
 }
 
 /** Adjust Square inventory (negative = deduct) */
@@ -467,58 +473,6 @@ app.get('/debug/square-count/:variationId', async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
-});
-
-// ── Debug endpoint: dump in-memory mapping + test Square call for problem SKUs
-app.get('/debug/mapping-check', async (req, res) => {
-  const skus = req.query.skus ? req.query.skus.split(',') : ['974842J', 'Z042202', 'A819863'];
-  const results = {};
-
-  for (const sku of skus) {
-    const entry = grainMapping[sku];
-    if (!entry) {
-      results[sku] = { error: 'NOT FOUND in grainMapping' };
-      continue;
-    }
-
-    const varId = entry.square_variation_id;
-    const varIdType = typeof varId;
-    const varIdJson = JSON.stringify(varId);
-
-    let squareResult = null;
-    let rawBody = null;
-    try {
-      const bodyObj = {
-        catalog_object_ids: [varId],
-        location_ids: [SQ_LOCATION_ID],
-        states: ['IN_STOCK']
-      };
-      rawBody = JSON.stringify(bodyObj);
-      const apiRes = await fetch(`\${SQ_API}/inventory/batch-retrieve-counts`, {
-        method: 'POST',
-        headers: sqHeaders(),
-        body: rawBody
-      });
-      const text = await apiRes.text();
-      squareResult = { status: apiRes.status, response: JSON.parse(text) };
-    } catch (e) {
-      squareResult = { error: e.message };
-    }
-
-    results[sku] = {
-      name: entry.name,
-      square_variation_id: varId,
-      square_variation_id_type: varIdType,
-      square_variation_id_json: varIdJson,
-      request_body_sent: rawBody,
-      square_result: squareResult,
-      has_bc_flour: !!entry.bc_flour,
-      bc_flour_variants_keys: entry.bc_flour ? Object.keys(entry.bc_flour.variants) : [],
-      entry_keys: Object.keys(entry)
-    };
-  }
-
-  res.json(results);
 });
 
 // ── Health check ────────────────────────────────────────────────────────────
