@@ -460,7 +460,7 @@ async function recalculateGrain(grainSku, options = {}) {
   }
 
   // 2. Get reserved lbs from pending BC orders (optionally passed in to avoid refetching)
-  const reservedMap  || await getReservedLbs();
+  const reservedMap = options.reservedMap || await getReservedLbs();
   const reservedLbs = reservedMap[grainSku] || 0;
 
   const availableLbs = Math.max(0, totalLbs - reservedLbs);
