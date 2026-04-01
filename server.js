@@ -457,6 +457,61 @@ app.get('/health', (req, res) => {
 });
 
 // ── Startup ─────────────────────────────────────────────────────────────────
+// === One-time webhook registration endpoint ===
+app.post('/register-webhooks', async (req, res) => {
+  const baseUrl = req.body.base_url || `https://${req.headers.host}`;
+  const results = { bc: null, square: null };
+
+  // Register BigCommerce webhook
+  try {
+    const bcRes = await fetch(`https://api.bigcommerce.com/stores/${BC_STORE_HASH}/v3/hooks`, {
+      method: 'POST',
+      headers: {
+        'X-Auth-Token': BC_ACCESS_TOKEN,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        scope: 'store/order/created',
+        destination: `${baseUrl}/webhooks/order-created`,
+        is_active: true,
+        headers: {}
+      })
+    });
+    results.bc = await bcRes.json();
+    console.log('BC webhook registered:', JSON.stringify(results.bc));
+  } catch (e) {
+    results.bc = { error: e.message };
+    console.error('BC webhook registration failed:', e.message);
+  }
+
+  // Register Square webhook
+  try {
+    const sqRes = await fetch('https://connect.squareup.com/v2/webhooks/subscriptions', {
+      method: 'POST',
+      headers: {
+        'Square-Version': '2024-01-18',
+        'Authorization': `Bearer ${SQ_ACCESS_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        subscription: {
+          name: 'Flour Inventory Sync',
+          event_types: ['inventory.count.updated'],
+          notification_url: `${baseUrl}/webhooks/square-inventory`,
+          enabled: true
+        }
+      })
+    });
+    results.square = await sqRes.json();
+    console.log('Square webhook registered:', JSON.stringify(results.square));
+  } catch (e) {
+    results.square = { error: e.message };
+    console.error('Square webhook registration failed:', e.message);
+  }
+
+  res.json(results);
+});
+
 if (!BC_ACCESS_TOKEN) {
   console.error('ERROR: BC_ACCESS_TOKEN is required');
   process.exit(1);
