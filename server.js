@@ -227,7 +227,17 @@ async function getSquareCount(variationId) {
       throw new Error(`Square batch-retrieve-counts: ${res.status} - ${text}`);
     }
     const data = await res.json();
-    if (!data.counts || data.counts.length === 0) return 0;
+    if (!data.counts || data.counts.length === 0) {
+      // Empty response — could be rate-limiting during bulk reconciliation.
+      // Retry with backoff instead of immediately returning 0.
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
+      console.warn(`getSquareCount: attempt ${attempt}/${MAX_RETRIES} empty counts for ${variationId}, retrying in ${delay}ms`);
+      if (attempt < MAX_RETRIES) {
+        await new Promise(r => setTimeout(r, delay));
+        continue;
+      }
+      return 0;
+    }
 
     // Validate response is for the requested variation (Square API sometimes
     // returns ALL counts instead of filtering by catalog_object_ids)
