@@ -283,8 +283,37 @@ async function getSquareCount(variationId) {
       await new Promise(r => setTimeout(r, delay));
     }
   }
-  // All retries returned mismatched data — return 0 to avoid wrong inventory
-  console.error(`getSquareCount: all retries failed for ${variationId}, returning 0`);
+  // All batch retries returned mismatched data — fall back to single-item GET endpoint.
+  // This uses a completely different API path that doesn't share the batch endpoint's
+  // caching/filtering issues during bulk reconciliation.
+  console.warn(`getSquareCount: batch retries exhausted for ${variationId}, trying single-item GET fallback...`);
+  try {
+    await new Promise(r => setTimeout(r, 2000)); // brief cooldown before fallback
+    const singleRes = await fetch(
+      `${SQ_API}/inventory/${variationId}?location_ids=${SQ_LOCATION_ID}`,
+      { method: 'GET', headers: sqHeaders() }
+    );
+    if (singleRes.ok) {
+      const singleData = await singleRes.json();
+      if (singleData.counts && singleData.counts.length > 0) {
+        const match = singleData.counts.find(c =>
+          c.catalog_object_id === variationId && c.state === 'IN_STOCK'
+        );
+        if (match) {
+          const qty = Math.floor(parseFloat(match.quantity)) || 0;
+          console.log(`getSquareCount: single-item GET fallback succeeded for ${variationId}, qty=${qty}`);
+          return qty;
+        }
+      }
+      console.warn(`getSquareCount: single-item GET returned no IN_STOCK count for ${variationId}`);
+    } else {
+      const errText = await singleRes.text();
+      console.error(`getSquareCount: single-item GET failed ${singleRes.status} for ${variationId}: ${errText}`);
+    }
+  } catch (fallbackErr) {
+    console.error(`getSquareCount: single-item GET exception for ${variationId}: ${fallbackErr.message}`);
+  }
+  console.error(`getSquareCount: all methods failed for ${variationId}, returning 0`);
   return 0;
 }
 
@@ -477,7 +506,7 @@ async function fullReconciliation() {
       }
 
       // Rate limit: pause between grains to avoid Square API returning unfiltered results
-      await new Promise(r => setTimeout(r, 1500));
+      await new Promise(r => setTimeout(r, 3000));
     }
 
     console.log(`\nReconciliation complete: ${processed} OK, ${errors} errors\n`);
