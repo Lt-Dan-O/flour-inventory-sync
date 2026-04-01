@@ -283,35 +283,37 @@ async function getSquareCount(variationId) {
       await new Promise(r => setTimeout(r, delay));
     }
   }
-  // All batch retries returned mismatched data — fall back to single-item GET endpoint.
-  // This uses a completely different API path that doesn't share the batch endpoint's
-  // caching/filtering issues during bulk reconciliation.
-  console.warn(`getSquareCount: batch retries exhausted for ${variationId}, trying single-item GET fallback...`);
+  // All batch retries returned mismatched data — try a long-cooldown final attempt.
+  // The batch endpoint's cache/filter issue clears after ~15s of inactivity.
+  console.warn(`getSquareCount: batch retries exhausted for ${variationId}, waiting 15s for cache clear...`);
   try {
-    await new Promise(r => setTimeout(r, 2000)); // brief cooldown before fallback
-    const singleRes = await fetch(
-      `${SQ_API}/inventory/${variationId}?location_ids=${SQ_LOCATION_ID}`,
-      { method: 'GET', headers: sqHeaders() }
-    );
-    if (singleRes.ok) {
-      const singleData = await singleRes.json();
-      if (singleData.counts && singleData.counts.length > 0) {
-        const match = singleData.counts.find(c =>
-          c.catalog_object_id === variationId && c.state === 'IN_STOCK'
-        );
+    await new Promise(r => setTimeout(r, 15000)); // long cooldown to let API cache clear
+    const finalRes = await fetch(`${SQ_API}/inventory/batch-retrieve-counts`, {
+      method: 'POST',
+      headers: sqHeaders(),
+      body: JSON.stringify({
+        catalog_object_ids: [variationId],
+        location_ids: [SQ_LOCATION_ID],
+        states: ['IN_STOCK']
+      })
+    });
+    if (finalRes.ok) {
+      const finalData = await finalRes.json();
+      if (finalData.counts && finalData.counts.length > 0) {
+        const match = finalData.counts.find(c => c.catalog_object_id === variationId);
         if (match) {
           const qty = Math.floor(parseFloat(match.quantity)) || 0;
-          console.log(`getSquareCount: single-item GET fallback succeeded for ${variationId}, qty=${qty}`);
+          console.log(`getSquareCount: long-cooldown retry succeeded for ${variationId}, qty=${qty}`);
           return qty;
         }
       }
-      console.warn(`getSquareCount: single-item GET returned no IN_STOCK count for ${variationId}`);
+      console.warn(`getSquareCount: long-cooldown retry still no match for ${variationId}, counts=${finalData.counts?.length || 0}`);
     } else {
-      const errText = await singleRes.text();
-      console.error(`getSquareCount: single-item GET failed ${singleRes.status} for ${variationId}: ${errText}`);
+      const errText = await finalRes.text();
+      console.error(`getSquareCount: long-cooldown retry failed ${finalRes.status} for ${variationId}: ${errText}`);
     }
   } catch (fallbackErr) {
-    console.error(`getSquareCount: single-item GET exception for ${variationId}: ${fallbackErr.message}`);
+    console.error(`getSquareCount: long-cooldown retry exception for ${variationId}: ${fallbackErr.message}`);
   }
   console.error(`getSquareCount: all methods failed for ${variationId}, returning 0`);
   return 0;
