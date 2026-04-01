@@ -5,8 +5,8 @@
  * The 1 LB per-lb count in Square = total pounds available.
  *
  * This service:
- *   1. Listens for BC order.created webhooks â deducts lbs from Square
- *   2. Listens for Square inventory.count.updated webhooks â recalculates BC
+ *   1. Listens for BC order.created webhooks → deducts lbs from Square
+ *   2. Listens for Square inventory.count.updated webhooks → recalculates BC
  *   3. Runs a 15-minute reconciliation poll as a safety net
  *
  * Inventory calculation from total_lbs:
@@ -28,7 +28,7 @@ const grainMapping = require('./grain-mapping.json');
 const app = express();
 app.use(express.json());
 
-// ââ Config ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Config ──────────────────────────────────────────────────────────────────
 const BC_STORE_HASH   = process.env.BC_STORE_HASH || 'h1uvrm9fjd';
 const BC_ACCESS_TOKEN = process.env.BC_ACCESS_TOKEN;
 const SQ_ACCESS_TOKEN = process.env.SQ_ACCESS_TOKEN;
@@ -39,12 +39,12 @@ const RECONCILE_MINS  = parseInt(process.env.RECONCILE_MINS || '15', 10);
 const BC_API = `https://api.bigcommerce.com/stores/${BC_STORE_HASH}`;
 const SQ_API = 'https://connect.squareup.com/v2';
 
-// ââ Reverse lookups (populated at startup) ââââââââââââââââââââââââââââââââââ
-// Map Square variation_id â grain base SKU (for Square webhook handler)
+// ── Reverse lookups (populated at startup) ──────────────────────────────────
+// Map Square variation_id → grain base SKU (for Square webhook handler)
 const sqVariationToGrain = {};
-// Map BC variant_id â { grainSku, lbs, type:'grain'|'flour' }
+// Map BC variant_id → { grainSku, lbs, type:'grain'|'flour' }
 const bcVariantToGrain = {};
-// Map grain SKU â flour SKU prefix (for matching flour variants to grain)
+// Map grain SKU → flour SKU prefix (for matching flour variants to grain)
 const flourSkuToGrain = {};
 
 // Build static lookups from grain-mapping.json (grain + Square data)
@@ -55,7 +55,7 @@ for (const [grainSku, entry] of Object.entries(grainMapping)) {
     bcVariantToGrain[vData.variant_id] = { grainSku, lbs: parseInt(lbs, 10), type: 'grain' };
   }
 
-  // Build flour SKU â grain mapping for auto-discovery
+  // Build flour SKU → grain mapping for auto-discovery
   // Flour SKUs follow pattern: FM-{grainSku} or FM-{grainSku}-{lbs}
   if (entry.bc_flour && entry.bc_flour.variants) {
     for (const [lbs, vData] of Object.entries(entry.bc_flour.variants)) {
@@ -110,14 +110,14 @@ async function discoverFlourVariants() {
       page++;
     }
 
-    console.log(`  â Discovered ${discovered} flour variants from BigCommerce`);
+    console.log(`  ✓ Discovered ${discovered} flour variants from BigCommerce`);
   } catch (e) {
-    console.error(`  â Flour discovery failed: ${e.message}`);
+    console.error(`  ✗ Flour discovery failed: ${e.message}`);
     console.error('    Flour inventory sync will be limited until IDs are available.');
   }
 }
 
-// ââ Helpers: BigCommerce ââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Helpers: BigCommerce ────────────────────────────────────────────────────
 function bcHeaders() {
   return {
     'X-Auth-Token': BC_ACCESS_TOKEN,
@@ -145,7 +145,7 @@ async function bcPut(path, body) {
 
 /** Fetch all pending/unshipped BC orders and sum reserved lbs per grain SKU */
 async function getReservedLbs() {
-  const reserved = {};  // grainSku â total lbs reserved
+  const reserved = {};  // grainSku → total lbs reserved
 
   // status_id 1=Pending, 9=Awaiting Shipment, 11=Awaiting Fulfillment, 12=Manual Verification Required
   const statuses = [1, 9, 11, 12];
@@ -200,7 +200,7 @@ async function setBcVariantStock(productId, variantId, level) {
   });
 }
 
-// ââ Helpers: Square âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Helpers: Square ─────────────────────────────────────────────────────────
 function sqHeaders() {
   return {
     'Square-Version': '2025-01-23',
@@ -228,7 +228,7 @@ async function getSquareCount(variationId) {
     }
     const data = await res.json();
     if (!data.counts || data.counts.length === 0) {
-      // Empty response â could be rate-limiting during bulk reconciliation.
+      // Empty response — could be rate-limiting during bulk reconciliation.
       // Retry with backoff instead of immediately returning 0.
       const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
       console.warn(`getSquareCount: attempt ${attempt}/${MAX_RETRIES} empty counts for ${variationId}, retrying in ${delay}ms`);
@@ -246,7 +246,7 @@ async function getSquareCount(variationId) {
       return Math.floor(parseFloat(matchedCount.quantity)) || 0;
     }
 
-    // API returned unfiltered results â page through them to find our item
+    // API returned unfiltered results — page through them to find our item
     if (data.cursor) {
       console.warn(`getSquareCount: attempt ${attempt} got ${data.counts.length} unfiltered counts for ${variationId}, paging through...`);
       let cursor = data.cursor;
@@ -276,14 +276,14 @@ async function getSquareCount(variationId) {
       }
     }
 
-    // Mismatch â API returned wrong data, retry with exponential backoff
+    // Mismatch — API returned wrong data, retry with exponential backoff
     const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000); // 1s, 2s, 4s, 8s
     console.warn(`getSquareCount: attempt ${attempt}/${MAX_RETRIES} mismatch for ${variationId}, got ${data.counts.length} unrelated counts, retrying in ${delay}ms`);
     if (attempt < MAX_RETRIES) {
       await new Promise(r => setTimeout(r, delay));
     }
   }
-  // All batch retries returned mismatched data â try a long-cooldown final attempt.
+  // All batch retries returned mismatched data — try a long-cooldown final attempt.
   // The batch endpoint's cache/filter issue clears after ~15s of inactivity.
   console.warn(`getSquareCount: batch retries exhausted for ${variationId}, waiting 15s for cache clear...`);
   try {
@@ -321,13 +321,14 @@ async function getSquareCount(variationId) {
 
 /**
  * Bulk-fetch inventory counts for ALL variations in a single API call.
- * Returns a Map of variationId â quantity (floored integer).
+ * Returns a Map of variationId → quantity (floored integer).
  * This avoids the per-item sequential call pattern that triggers Square's
  * unfiltered-response bug during bulk reconciliation.
  */
 async function bulkFetchSquareCounts(variationIds) {
   const countMap = new Map();
   try {
+    // Phase 1: Bulk fetch all IDs at once
     let cursor = null;
     let pageNum = 1;
     do {
@@ -359,7 +360,51 @@ async function bulkFetchSquareCounts(variationIds) {
       pageNum++;
       if (countMap.size >= variationIds.length) break;
     } while (cursor && pageNum <= 30);
-    console.log(`bulkFetchSquareCounts: fetched ${countMap.size}/${variationIds.length} counts in ${pageNum - 1} page(s)`);
+    console.log(`bulkFetchSquareCounts: bulk phase fetched ${countMap.size}/${variationIds.length} counts in ${pageNum - 1} page(s)`);
+
+    // Phase 2: Retry missing IDs individually with delays
+    const missingIds = variationIds.filter(id => !countMap.has(id));
+    if (missingIds.length > 0) {
+      console.log(`bulkFetchSquareCounts: ${missingIds.length} IDs missing from bulk response, retrying individually...`);
+      await new Promise(r => setTimeout(r, 3000)); // 3s cooldown before individual calls
+
+      for (const missingId of missingIds) {
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            const res = await fetch(`${SQ_API}/inventory/batch-retrieve-counts`, {
+              method: 'POST',
+              headers: sqHeaders(),
+              body: JSON.stringify({
+                catalog_object_ids: [missingId],
+                location_ids: [SQ_LOCATION_ID],
+                states: ['IN_STOCK']
+              })
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.counts && data.counts.length > 0) {
+                const match = data.counts.find(c => c.catalog_object_id === missingId);
+                if (match) {
+                  const qty = Math.floor(parseFloat(match.quantity)) || 0;
+                  countMap.set(missingId, qty);
+                  console.log(`bulkFetchSquareCounts: recovered ${missingId} = ${qty} on attempt ${attempt}`);
+                  break;
+                }
+              }
+              // Got response but no matching count - item may have 0 inventory
+              if (attempt === 3) {
+                console.log(`bulkFetchSquareCounts: ${missingId} returned no counts after ${attempt} attempts (likely 0 stock)`);
+              }
+            }
+          } catch (e) {
+            console.error(`bulkFetchSquareCounts: individual retry error for ${missingId}: ${e.message}`);
+          }
+          if (attempt < 3) await new Promise(r => setTimeout(r, 2000 * attempt)); // increasing delay
+        }
+        await new Promise(r => setTimeout(r, 2000)); // 2s between each missing item
+      }
+      console.log(`bulkFetchSquareCounts: after individual retries: ${countMap.size}/${variationIds.length} total`);
+    }
   } catch (e) {
     console.error(`bulkFetchSquareCounts: exception: ${e.message}`);
   }
@@ -398,7 +443,7 @@ async function adjustSquareInventory(variationId, adjustment) {
   return res.json();
 }
 
-// ââ Core: Recalculate all BC variants from Square truth âââââââââââââââââââââ
+// ── Core: Recalculate all BC variants from Square truth ─────────────────────
 async function recalculateGrain(grainSku, options = {}) {
   const entry = grainMapping[grainSku];
   if (!entry) {
@@ -415,7 +460,7 @@ async function recalculateGrain(grainSku, options = {}) {
   }
 
   // 2. Get reserved lbs from pending BC orders (optionally passed in to avoid refetching)
-  const reservedMap = options.reservedMap || await getReservedLbs();
+  const reservedMap  || await getReservedLbs();
   const reservedLbs = reservedMap[grainSku] || 0;
 
   const availableLbs = Math.max(0, totalLbs - reservedLbs);
@@ -453,7 +498,7 @@ async function recalculateGrain(grainSku, options = {}) {
   console.log(`  [${entry.name}] BC updated: grain=${JSON.stringify(grainLevels)}, flour 1/5/10=${availableLbs}/${Math.floor(availableLbs / 5)}/${Math.floor(availableLbs / 10)}`);
 }
 
-// ââ Handler 1: BC order.created webhook âââââââââââââââââââââââââââââââââââââ
+// ── Handler 1: BC order.created webhook ─────────────────────────────────────
 app.post('/webhooks/order-created', async (req, res) => {
   res.status(200).json({ received: true });
 
@@ -474,11 +519,11 @@ app.post('/webhooks/order-created', async (req, res) => {
       const lbsToDeduct = lookup.lbs * item.quantity;
       const entry = grainMapping[lookup.grainSku];
 
-      console.log(`  ${lookup.type} SKU ${item.sku} x${item.quantity} = ${lbsToDeduct} lbs â deduct from Square`);
+      console.log(`  ${lookup.type} SKU ${item.sku} x${item.quantity} = ${lbsToDeduct} lbs → deduct from Square`);
 
       try {
         await adjustSquareInventory(entry.square_variation_id, -lbsToDeduct);
-        console.log(`  â Square deducted ${lbsToDeduct} lbs from ${entry.name}`);
+        console.log(`  → Square deducted ${lbsToDeduct} lbs from ${entry.name}`);
         affectedGrains.add(lookup.grainSku);
       } catch (e) {
         console.error(`  ERROR deducting from Square for ${item.sku}: ${e.message}`);
@@ -503,7 +548,7 @@ app.post('/webhooks/order-created', async (req, res) => {
   }
 });
 
-// ââ Handler 2: Square inventory webhook âââââââââââââââââââââââââââââââââââââ
+// ── Handler 2: Square inventory webhook ─────────────────────────────────────
 app.post('/webhooks/square-inventory', async (req, res) => {
   res.status(200).json({ received: true });
 
@@ -536,11 +581,11 @@ app.post('/webhooks/square-inventory', async (req, res) => {
   }
 });
 
-// ââ Handler 3: Full reconciliation (called by cron or manually) âââââââââââââ
+// ── Handler 3: Full reconciliation (called by cron or manually) ─────────────
 async function fullReconciliation() {
-  console.log(`\nââââââââââââââââââââââââââââââââââââââââââââ`);
-  console.log(`â   FULL RECONCILIATION - ${new Date().toISOString()}   â`);
-  console.log(`ââââââââââââââââââââââââââââââââââââââââââââ`);
+  console.log(`\n╔══════════════════════════════════════════╗`);
+  console.log(`║   FULL RECONCILIATION - ${new Date().toISOString()}   ║`);
+  console.log(`╚══════════════════════════════════════════╝`);
 
   try {
     // Get all reserved lbs once (shared across all grains)
@@ -584,7 +629,7 @@ app.get('/reconcile', async (req, res) => {
   fullReconciliation();
 });
 
-// ââ Debug endpoint: raw Square inventory response ââââââââââââââââââââââââââ
+// ── Debug endpoint: raw Square inventory response ──────────────────────────
 app.get('/debug/square-count/:variationId', async (req, res) => {
   try {
     const variationId = req.params.variationId;
@@ -615,7 +660,7 @@ app.get('/debug/square-count/:variationId', async (req, res) => {
   }
 });
 
-// ââ Debug endpoint: dump in-memory mapping + test Square call for problem SKUs
+// ── Debug endpoint: dump in-memory mapping + test Square call for problem SKUs
 app.get('/debug/mapping-check', async (req, res) => {
   const skus = req.query.skus ? req.query.skus.split(',') : ['974842J', 'Z042202', 'A819863'];
   const results = {};
@@ -667,7 +712,7 @@ app.get('/debug/mapping-check', async (req, res) => {
   res.json(results);
 });
 
-// ââ Health check ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Health check ────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
   const flourCount = Object.values(bcVariantToGrain).filter(v => v.type === 'flour').length;
   const grainCount = Object.values(bcVariantToGrain).filter(v => v.type === 'grain').length;
@@ -686,7 +731,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// ââ Startup âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ── Startup ─────────────────────────────────────────────────────────────────
 // === One-time webhook registration endpoint ===
 app.post('/register-webhooks', async (req, res) => {
   const baseUrl = req.body.base_url || `https://${req.headers.host}`;
@@ -752,7 +797,7 @@ if (!SQ_ACCESS_TOKEN) {
 }
 
 app.listen(PORT, async () => {
-  console.log(`\nð¾ Grain-Flour Inventory Sync running on port ${PORT}`);
+  console.log(`\n🌾 Grain-Flour Inventory Sync running on port ${PORT}`);
   console.log(`   BC store: ${BC_STORE_HASH}`);
   console.log(`   Square location: ${SQ_LOCATION_ID}`);
   console.log(`   Grain mappings: ${Object.keys(grainMapping).length}`);
@@ -771,10 +816,10 @@ app.listen(PORT, async () => {
   // Schedule recurring reconciliation
   if (RECONCILE_MINS > 0) {
     setInterval(fullReconciliation, RECONCILE_MINS * 60 * 1000);
-    console.log(`   â° First reconciliation in ${RECONCILE_MINS} minutes`);
+    console.log(`   ⏰ First reconciliation in ${RECONCILE_MINS} minutes`);
 
     // Run initial reconciliation 30 seconds after boot
     setTimeout(fullReconciliation, 30000);
-    console.log(`   â° Initial reconciliation in 30 seconds\n`);
+    console.log(`   ⏰ Initial reconciliation in 30 seconds\n`);
   }
 });
