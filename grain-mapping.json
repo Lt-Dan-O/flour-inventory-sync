@@ -1,7 +1,7 @@
 {
   "Z042202": {
     "name": "Hard White Wheat Berries, Organic",
-    "square_variation_id": "6LNO7YHQXMXPTQT35URT6PAS",
+    "square_variation_id": "6LNO7YHQXMXPTYT35URT6PAS",
     "square_location_id": "D7QJPMPVZME4K",
     "bc_grain": {
       "product_id": 4038,
@@ -28,7 +28,7 @@
       "variants": {
         "1": {
           "bc_product_id": 4038,
-          "bc_variant_id": 8408,
+          "bc_variant_id": 840
           "sku": "FM-Z042202"
         },
         "5": {
@@ -316,7 +316,7 @@
   },
   "974842J": {
     "name": "Black Emmer, Organic",
-    "square_variation_id": "FVLJJHV4Q6FZYYPUQRQNFJYJ",
+    "square_variation_id": "FVLJJHV4Q6FZYYPUQRQNFJXJ",
     "square_location_id": "D7QJPMPVZME4K",
     "bc_grain": {
       "product_id": 4056,
@@ -811,7 +811,7 @@
   },
   "A819863": {
     "name": "Rye Berries, Organic",
-    "square_variation_id": "GKIZGHIFLU33M45J6QRXWDJP",
+    "square_variation_id": "FKIZGHIFLU33M45J6QRXWDJP",
     "square_location_id": "D7QJPMPVZME4K",
     "bc_grain": {
       "product_id": 4068,
