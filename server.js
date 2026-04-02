@@ -1,13 +1,14 @@
 /**
- * Unified Grain-Flour-Coffee Inventory Sync Service
+ * Unified Grain-Flour-Coffee-Mill Inventory Sync Service
  *
  * Square is the absolute source of truth for inventory.
  *
  * GRAIN/FLOUR: The per-lb count in Square = total pounds available.
  * COFFEE: The per-oz count in Square = total ounces available.
+ * MILLS: The unit count in Square = total units available (1:1 sync).
  *
  * This service:
- *   1. Listens for BC order.created webhooks → deducts lbs/oz from Square
+ *   1. Listens for BC order.created webhooks → deducts lbs/oz/units from Square
  *   2. Listens for Square inventory.count.updated webhooks → recalculates BC
  *   3. Runs a 15-minute reconciliation poll as a safety net
  *
@@ -24,6 +25,10 @@
  *   - Per-oz variant = available_oz  (1:1 sync, only per-oz variant)
  *   - 1lb/5lb bags handled separately, NOT synced
  *
+ * Mill inventory calculation from total_units:
+ *   - BC "Current Stock" variant = available_units  (1:1 sync)
+ *   - PreOrder variants handled separately, NOT synced
+ *
  * "available" = Square total - reserved (pending/unshipped BC orders)
  */
 
@@ -31,6 +36,7 @@ const express = require('express');
 const fetch = require('node-fetch');
 const grainMapping = require('./grain-mapping.json');
 const coffeeMapping = require('./coffee-mapping.json');
+const millMapping = require('./mill-mapping.json');
 
 const app = express();
 app.use(express.json());
@@ -60,6 +66,12 @@ const sqVariationToCoffee = {};
 // Map BC variant_id → { coffeeSku, oz: 1, type: 'coffee' }
 const bcVariantToCoffee = {};
 
+// Mill reverse lookups
+// Map Square variation_id → mill SKU (for Square webhook handler)
+const sqVariationToMill = {};
+// Map BC variant_id → { millSku, units: 1, type: 'mill' }
+const bcVariantToMill = {};
+
 // Build static lookups from grain-mapping.json (grain + Square data)
 for (const [grainSku, entry] of Object.entries(grainMapping)) {
   sqVariationToGrain[entry.square_variation_id] = grainSku;
@@ -87,6 +99,12 @@ for (const [coffeeSku, entry] of Object.entries(coffeeMapping)) {
   if (entry.bc_per_oz) {
     bcVariantToCoffee[entry.bc_per_oz.variant_id] = { coffeeSku, oz: 1, type: 'coffee' };
   }
+}
+
+// Build static lookups from mill-mapping.json
+for (const [millSku, entry] of Object.entries(millMapping)) {
+  sqVariationToMill[entry.square_variation_id] = millSku;
+  bcVariantToMill[entry.bc_variant_id] = { millSku, units: 1, type: 'mill' };
 }
 
 /**
@@ -602,6 +620,84 @@ async function recalculateCoffee(coffeeSku, options = {}) {
   console.log(`  [COFFEE: ${entry.name}] BC per-oz updated: ${availableOz}`);
 }
 
+/** Fetch all pending/unshipped BC orders and sum reserved units per mill SKU */
+async function getReservedUnits() {
+  const reserved = {};  // millSku → total units reserved
+
+  const statuses = [1, 9, 11, 12];
+
+  for (const statusId of statuses) {
+    let page = 1;
+    while (true) {
+      let orders;
+      try {
+        orders = await bcGet(`/v2/orders?status_id=${statusId}&page=${page}&limit=50`);
+      } catch (e) {
+        break;
+      }
+      if (!orders || !Array.isArray(orders) || orders.length === 0) break;
+
+      for (const order of orders) {
+        let products;
+        try {
+          products = await bcGet(`/v2/orders/${order.id}/products`);
+        } catch (e) {
+          continue;
+        }
+
+        for (const item of products) {
+          const vid = item.variant_id;
+          const lookup = bcVariantToMill[vid];
+          if (!lookup) continue;
+
+          // Each unit = 1 mill
+          if (!reserved[lookup.millSku]) reserved[lookup.millSku] = 0;
+          reserved[lookup.millSku] += item.quantity;
+        }
+      }
+
+      if (orders.length < 50) break;
+      page++;
+    }
+  }
+
+  return reserved;
+}
+
+// ── Core: Recalculate mill BC variant from Square truth ───────────────────
+async function recalculateMill(millSku, options = {}) {
+  const entry = millMapping[millSku];
+  if (!entry) {
+    console.warn(`recalculateMill: unknown mill SKU "${millSku}"`);
+    return;
+  }
+
+  // 1. Get total units from Square (use pre-fetched bulk counts if available)
+  let totalUnits;
+  if (options.bulkCounts && options.bulkCounts.has(entry.square_variation_id)) {
+    totalUnits = options.bulkCounts.get(entry.square_variation_id);
+  } else {
+    totalUnits = await getSquareCount(entry.square_variation_id);
+  }
+
+  // 2. Get reserved units from pending BC orders
+  const reservedMap = options.reservedUnitsMap || await getReservedUnits();
+  const reservedUnits = reservedMap[millSku] || 0;
+
+  const availableUnits = Math.max(0, totalUnits - reservedUnits);
+
+  console.log(`  [MILL: ${entry.name}] Square=${totalUnits} units, reserved=${reservedUnits}, available=${availableUnits}`);
+
+  // 3. Set BC variant stock (1:1 sync)
+  try {
+    await setBcVariantStock(entry.bc_product_id, entry.bc_variant_id, availableUnits);
+  } catch (e) {
+    console.error(`    ERROR setting mill (vid ${entry.bc_variant_id}): ${e.message}`);
+  }
+
+  console.log(`  [MILL: ${entry.name}] BC updated: ${availableUnits}`);
+}
+
 // ── Handler 1: BC order.created webhook ─────────────────────────────────────
 app.post('/webhooks/order-created', async (req, res) => {
   res.status(200).json({ received: true });
@@ -615,6 +711,7 @@ app.post('/webhooks/order-created', async (req, res) => {
     const products = await bcGet(`/v2/orders/${orderId}/products`);
     const affectedGrains = new Set();
     const affectedCoffees = new Set();
+    const affectedMills = new Set();
 
     for (const item of products) {
       const vid = item.variant_id;
@@ -652,11 +749,29 @@ app.post('/webhooks/order-created', async (req, res) => {
         } catch (e) {
           console.error(`  ERROR deducting from Square for ${item.sku}: ${e.message}`);
         }
+        continue;
+      }
+
+      // Check mill
+      const millLookup = bcVariantToMill[vid];
+      if (millLookup) {
+        const unitsToDeduct = item.quantity;
+        const entry = millMapping[millLookup.millSku];
+
+        console.log(`  mill SKU ${item.sku} x${item.quantity} = ${unitsToDeduct} unit(s) → deduct from Square`);
+
+        try {
+          await adjustSquareInventory(entry.square_variation_id, -unitsToDeduct);
+          console.log(`  → Square deducted ${unitsToDeduct} unit(s) from ${entry.name}`);
+          affectedMills.add(millLookup.millSku);
+        } catch (e) {
+          console.error(`  ERROR deducting from Square for ${item.sku}: ${e.message}`);
+        }
       }
     }
 
-    if (affectedGrains.size === 0 && affectedCoffees.size === 0) {
-      console.log(`  No grain/flour/coffee items in order, skipping recalculation`);
+    if (affectedGrains.size === 0 && affectedCoffees.size === 0 && affectedMills.size === 0) {
+      console.log(`  No grain/flour/coffee/mill items in order, skipping recalculation`);
       return;
     }
 
@@ -675,6 +790,15 @@ app.post('/webhooks/order-created', async (req, res) => {
       const reservedOzMap = await getReservedOz();
       for (const coffeeSku of affectedCoffees) {
         await recalculateCoffee(coffeeSku, { reservedOzMap });
+      }
+    }
+
+    // Recalculate all affected mills
+    if (affectedMills.size > 0) {
+      console.log(`  Recalculating ${affectedMills.size} mill(s)...`);
+      const reservedUnitsMap = await getReservedUnits();
+      for (const millSku of affectedMills) {
+        await recalculateMill(millSku, { reservedUnitsMap });
       }
     }
 
@@ -718,6 +842,16 @@ app.post('/webhooks/square-inventory', async (req, res) => {
       return;
     }
 
+    // Check mill mapping
+    const millSku = sqVariationToMill[entityId];
+    if (millSku) {
+      console.log(`\n=== Square inventory changed for mill: ${millMapping[millSku].name} ===`);
+      await new Promise(r => setTimeout(r, 2000));
+      await recalculateMill(millSku);
+      console.log(`=== Square inventory sync complete ===\n`);
+      return;
+    }
+
     console.log(`Square inventory webhook: variation ${entityId} not in our mapping, skipping`);
   } catch (e) {
     console.error(`Error processing Square inventory webhook: ${e.message}`);
@@ -731,16 +865,19 @@ async function fullReconciliation() {
   console.log(`╚══════════════════════════════════════════╝`);
 
   try {
-    // Get all reserved lbs/oz once (shared across all products)
+    // Get all reserved lbs/oz/units once (shared across all products)
     const reservedMap = await getReservedLbs();
     const reservedOzMap = await getReservedOz();
+    const reservedUnitsMap = await getReservedUnits();
     console.log(`Reserved lbs from pending orders:`, reservedMap);
     console.log(`Reserved oz from pending coffee orders:`, reservedOzMap);
+    console.log(`Reserved units from pending mill orders:`, reservedUnitsMap);
 
-    // Pre-fetch ALL Square counts (grain + coffee) in a single bulk call
+    // Pre-fetch ALL Square counts (grain + coffee + mill) in a single bulk call
     const grainVariationIds = Object.values(grainMapping).map(g => g.square_variation_id);
     const coffeeVariationIds = Object.values(coffeeMapping).map(c => c.square_variation_id);
-    const allVariationIds = [...grainVariationIds, ...coffeeVariationIds];
+    const millVariationIds = Object.values(millMapping).map(m => m.square_variation_id);
+    const allVariationIds = [...grainVariationIds, ...coffeeVariationIds, ...millVariationIds];
     const bulkCounts = await bulkFetchSquareCounts(allVariationIds);
 
     let processed = 0;
@@ -799,7 +936,34 @@ async function fullReconciliation() {
 
     console.log(`Coffee reconciliation complete: ${coffeeProcessed} OK, ${coffeeErrors} errors`);
 
-    // Combine zero items for deferred retry (grain + coffee)
+    // ── Mill reconciliation ───────────────────────────────────────────────
+    console.log(`\n--- Mill Reconciliation (${Object.keys(millMapping).length} products) ---`);
+    let millProcessed = 0;
+    let millErrors = 0;
+    const zeroMillItems = [];
+
+    for (const millSku of Object.keys(millMapping)) {
+      try {
+        const entry = millMapping[millSku];
+        const sqCount = bulkCounts.has(entry.square_variation_id)
+          ? bulkCounts.get(entry.square_variation_id)
+          : null;
+        await recalculateMill(millSku, { reservedUnitsMap, bulkCounts });
+        millProcessed++;
+        if (sqCount === null || sqCount === 0) {
+          zeroMillItems.push(millSku);
+        }
+      } catch (e) {
+        console.error(`  ERROR reconciling mill ${millSku}: ${e.message}`);
+        millErrors++;
+      }
+
+      await new Promise(r => setTimeout(r, 500));
+    }
+
+    console.log(`Mill reconciliation complete: ${millProcessed} OK, ${millErrors} errors`);
+
+    // Combine zero items for deferred retry (grain + coffee + mill)
     const zeroCoffeeForRetry = zeroCoffeeItems.map(sku => ({ sku, type: 'coffee' }));
     const zeroGrainForRetry = zeroItems.map(sku => ({ sku, type: 'grain' }));
 
@@ -836,6 +1000,44 @@ async function fullReconciliation() {
           }
         } catch (e) {
           console.error(`  Coffee retry error for ${entry.name}: ${e.message}`);
+        }
+        await new Promise(r => setTimeout(r, 3000));
+      }
+    }
+
+    // Deferred retry pass for mill items with 0 counts
+    if (zeroMillItems.length > 0) {
+      console.log(`\n--- Mill deferred retry: ${zeroMillItems.length} items with 0 counts ---`);
+      await new Promise(r => setTimeout(r, 30000)); // 30s cooldown
+
+      for (const millSku of zeroMillItems) {
+        const entry = millMapping[millSku];
+        try {
+          const res = await fetch(`${SQ_API}/inventory/batch-retrieve-counts`, {
+            method: 'POST',
+            headers: sqHeaders(),
+            body: JSON.stringify({
+              catalog_object_ids: [entry.square_variation_id],
+              location_ids: [SQ_LOCATION_ID],
+              states: ['IN_STOCK']
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.counts && data.counts.length > 0) {
+              const match = data.counts.find(c => c.catalog_object_id === entry.square_variation_id);
+              if (match) {
+                const qty = Math.floor(parseFloat(match.quantity)) || 0;
+                if (qty > 0) {
+                  console.log(`  Mill retry: ${entry.name} recovered Square=${qty} units`);
+                  const fixedCounts = new Map([[entry.square_variation_id, qty]]);
+                  await recalculateMill(millSku, { reservedUnitsMap, bulkCounts: fixedCounts });
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error(`  Mill retry error for ${entry.name}: ${e.message}`);
         }
         await new Promise(r => setTimeout(r, 3000));
       }
@@ -1079,16 +1281,19 @@ app.get('/health', (req, res) => {
   const flourCount = Object.values(bcVariantToGrain).filter(v => v.type === 'flour').length;
   const grainCount = Object.values(bcVariantToGrain).filter(v => v.type === 'grain').length;
   const coffeeCount = Object.keys(bcVariantToCoffee).length;
+  const millCount = Object.keys(bcVariantToMill).length;
   res.json({
     status: 'ok',
     store: BC_STORE_HASH,
     square_location: SQ_LOCATION_ID,
     grain_products: Object.keys(grainMapping).length,
     coffee_products: Object.keys(coffeeMapping).length,
+    mill_products: Object.keys(millMapping).length,
     bc_grain_variants: grainCount,
     bc_flour_variants: flourCount,
     bc_coffee_variants: coffeeCount,
-    bc_total_variants: Object.keys(bcVariantToGrain).length + coffeeCount,
+    bc_mill_variants: millCount,
+    bc_total_variants: Object.keys(bcVariantToGrain).length + coffeeCount + millCount,
     has_bc_token: !!BC_ACCESS_TOKEN,
     has_sq_token: !!SQ_ACCESS_TOKEN,
     reconcile_interval_mins: RECONCILE_MINS,
@@ -1162,11 +1367,12 @@ if (!SQ_ACCESS_TOKEN) {
 }
 
 app.listen(PORT, async () => {
-  console.log(`\n🌾☕ Grain-Flour-Coffee Inventory Sync running on port ${PORT}`);
+  console.log(`\n🌾☕🔧 Grain-Flour-Coffee-Mill Inventory Sync running on port ${PORT}`);
   console.log(`   BC store: ${BC_STORE_HASH}`);
   console.log(`   Square location: ${SQ_LOCATION_ID}`);
   console.log(`   Grain mappings: ${Object.keys(grainMapping).length}`);
   console.log(`   Coffee mappings: ${Object.keys(coffeeMapping).length}`);
+  console.log(`   Mill mappings: ${Object.keys(millMapping).length}`);
   console.log(`   Reconciliation interval: ${RECONCILE_MINS} minutes`);
   console.log(`\n   Endpoints:`);
   console.log(`     POST /webhooks/order-created      (BC order webhook)`);
@@ -1179,6 +1385,7 @@ app.listen(PORT, async () => {
   await discoverFlourVariants();
   console.log(`   BC grain/flour variant lookups: ${Object.keys(bcVariantToGrain).length}`);
   console.log(`   BC coffee variant lookups: ${Object.keys(bcVariantToCoffee).length}`);
+  console.log(`   BC mill variant lookups: ${Object.keys(bcVariantToMill).length}`);
 
   // Schedule recurring reconciliation
   if (RECONCILE_MINS > 0) {
