@@ -1,36 +1,39 @@
-UNIFIED GRAIN-FLOUR INVENTORY SYNC
-===================================
+UNIFIED GRAIN-FLOUR-COFFEE INVENTORY SYNC
+==========================================
 
-Square is the ABSOLUTE SOURCE OF TRUTH for grain inventory.
-The per-lb count in Square = total pounds available.
+Square is the ABSOLUTE SOURCE OF TRUTH for all inventory.
 
+GRAINS/FLOUR: The per-lb count in Square = total pounds available.
 All BigCommerce variant levels (grain AND flour) are calculated from that total,
 minus any lbs reserved by pending/unshipped BC orders.
 
-  Example: Warthog has 22 lbs in Square, 0 lbs reserved
+COFFEE: The per-oz count in Square = total ounces available.
+Only the BC per-oz variant is synced (1:1). The 1lb and 5lb bag variants
+are handled separately and are NOT part of this sync.
+
+  Example (Grain): Warthog has 22 lbs in Square, 0 lbs reserved
     -> Grain: 1 LB=22, 5 LB=4, 10 LB=2, 25 LB=0
     -> Flour: 1 LB=22, 5 LB=4, 10 LB=2
 
-  Example: Warthog has 22 lbs in Square, 5 lbs reserved (pending order for 5 LB bag)
-    -> Available = 17 lbs
-    -> Grain: 1 LB=17, 5 LB=3, 10 LB=1, 25 LB=0
-    -> Flour: 1 LB=17, 5 LB=3, 10 LB=1
+  Example (Coffee): Kenya Nyeri has 96 oz in Square, 3 oz reserved
+    -> BC per-oz variant: 93
 
 
 THREE SYNC TRIGGERS
 -------------------
 
   1. BC ORDER WEBHOOK (POST /webhooks/order-created)
-     When a customer places an order on BigCommerce (grain OR flour),
-     this deducts the equivalent lbs from Square, then recalculates
+     When a customer places an order on BigCommerce (grain, flour, OR coffee),
+     this deducts the equivalent lbs/oz from Square, then recalculates
      all BC variant levels.
 
   2. SQUARE INVENTORY WEBHOOK (POST /webhooks/square-inventory)
      When Square inventory changes (manual adjustment, POS sale, etc.),
      this recalculates all BC variant levels from the new Square count.
+     Handles both grain and coffee variations.
 
   3. 15-MINUTE RECONCILIATION (automatic + GET/POST /reconcile)
-     Safety net that re-syncs ALL 25 grain products every 15 minutes.
+     Safety net that re-syncs ALL 25 grain + 16 coffee products every 15 min.
      Also runs 30 seconds after server boot.
 
 
@@ -84,6 +87,7 @@ FILES
 
   server.js             - Main sync service (3 handlers + reconciliation + auto-discovery)
   grain-mapping.json    - Mapping: Square IDs + BC grain IDs (flour IDs auto-discovered)
+  coffee-mapping.json   - Mapping: Square IDs + BC per-oz coffee variant IDs
   sku-mapping.json      - Legacy flour→grain mapping (kept for reference)
   register-webhook.js   - Register BC + Square webhooks
   update-flour-ids.js   - Optional: manually update flour IDs in grain-mapping.json
@@ -93,7 +97,8 @@ FILES
 
   NOTE: Flour variant IDs are AUTO-DISCOVERED at startup by querying BC
   category 557 (Freshly Milled Flour). No manual mapping step needed.
-  The health endpoint shows how many flour variants were discovered.
+  Coffee variant IDs are STATIC in coffee-mapping.json (per-oz only).
+  The health endpoint shows counts for all product types.
 
 
 RENDER.COM FREE TIER NOTES
@@ -115,11 +120,11 @@ TROUBLESHOOTING
   "BC GET /v2/orders/...: 401"
     -> BC_ACCESS_TOKEN is invalid. Regenerate it.
 
-  "No grain/flour items in order, skipping"
-    -> Normal. The order had no grain or flour products.
+  "No grain/flour/coffee items in order, skipping"
+    -> Normal. The order had no grain, flour, or coffee products.
 
   "variation XXX not in our mapping, skipping"
-    -> Square inventory changed for a non-grain item. Normal.
+    -> Square inventory changed for an item not in grain or coffee mapping. Normal.
 
   BC levels don't match expected calculation:
     -> Check pending orders: there may be reserved lbs.

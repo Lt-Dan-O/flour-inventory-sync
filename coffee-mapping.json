@@ -1,0 +1,162 @@
+{
+  "B716392": {
+    "name": "Brazil Minas Gerais Cerrado, Green Coffee Bean, Natural Process",
+    "square_variation_id": "GB4HU6WMBZCPREPF4NNWPNRO",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3892,
+      "variant_id": 6583,
+      "sku": "B716392"
+    }
+  },
+  "839054H": {
+    "name": "Brazil Oberon Ayabas Guiro Estate Coffee Beans, Bulk",
+    "square_variation_id": "WSRP7P546ISJMYPV6T2IR2NA",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3901,
+      "variant_id": 6619,
+      "sku": "839054H"
+    }
+  },
+  "8515613": {
+    "name": "Colombia Narino, Wet Process",
+    "square_variation_id": "OFUPIWJIEAFLLPPK3USS5GGX",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3874,
+      "variant_id": 6514,
+      "sku": "8515613"
+    }
+  },
+  "249545R": {
+    "name": "Colombia Popayan, Wet Process, Bulk",
+    "square_variation_id": "2LACLRGFGFCKRMNGGAATPHP4",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3886,
+      "variant_id": 6559,
+      "sku": "249545R"
+    }
+  },
+  "176021K": {
+    "name": "Ethiopia Harrar, Natural Process, Green Coffee Bean",
+    "square_variation_id": "IP4VXZ2YS6IFQWYJN3V3H7LD",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3881,
+      "variant_id": 6539,
+      "sku": "176021K"
+    }
+  },
+  "887827W": {
+    "name": "Ethiopia Sidamo, Natural Processed, Bulk",
+    "square_variation_id": "RTR7G2M62GK5Z2D46CM5RKTT",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3880,
+      "variant_id": 6535,
+      "sku": "887827W"
+    }
+  },
+  "820984V": {
+    "name": "Ethiopia Sidamo, Wet Process, Green Coffee Beans",
+    "square_variation_id": "TK7A6KJA5R5V3W2NQUF6K73T",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3887,
+      "variant_id": 6563,
+      "sku": "820984V"
+    }
+  },
+  "670485D": {
+    "name": "Ethiopia Yirgacheffe, Green Coffee Beans, Wet Process",
+    "square_variation_id": "SHXUZFRG346LJIB34VJXMS6M",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3879,
+      "variant_id": 6531,
+      "sku": "670485D"
+    }
+  },
+  "X690008": {
+    "name": "Guatemala Huehuetenango, Green Coffee Beans",
+    "square_variation_id": "HR2VVQA2DJIWWQVKH6HBD257",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3875,
+      "variant_id": 6518,
+      "sku": "X690008"
+    }
+  },
+  "J506806": {
+    "name": "Guatemala Santiago Atitla, Wet Processed, Green Coffee Beans, Bulk",
+    "square_variation_id": "J7Y5FO2ZFNJKUZUVXSUKJYAU",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3891,
+      "variant_id": 6579,
+      "sku": "J506806"
+    }
+  },
+  "N998569": {
+    "name": "Indonesia Java, Wet Process, Bulk",
+    "square_variation_id": "TGPOWRMQRFXYLURH6JKSTZNQ",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3885,
+      "variant_id": 6555,
+      "sku": "N998569"
+    }
+  },
+  "5186627": {
+    "name": "Indonesia Sulawesi, Wet Process, Bulk",
+    "square_variation_id": "THU7MGPPME5SIFH5QVZN56HL",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3884,
+      "variant_id": 6551,
+      "sku": "5186627"
+    }
+  },
+  "A766918": {
+    "name": "Indonesia Sumatra, Green Coffee Beans, Wet Processed",
+    "square_variation_id": "ALEO5IIXHNEAS7RJOTZLV6ZV",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3883,
+      "variant_id": 6547,
+      "sku": "A766918"
+    }
+  },
+  "297365Z": {
+    "name": "Kenya Kirinyaga, Green Coffee Bean, Wet Process",
+    "square_variation_id": "A4VJ3THSFUEX73ZCXCAHPX6U",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3889,
+      "variant_id": 6571,
+      "sku": "297365Z"
+    }
+  },
+  "116506N": {
+    "name": "Kenya Nyeri, Wet Process, Bulk",
+    "square_variation_id": "6DDONDZB2LWYYFLFFGRPPD3W",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3882,
+      "variant_id": 6543,
+      "sku": "116506N"
+    }
+  },
+  "4360907": {
+    "name": "Mexico Chiapas, Wet Process, Green Coffee Beans",
+    "square_variation_id": "DVCSCSXSSPSIKIJT6NLRHO2N",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3878,
+      "variant_id": 6527,
+      "sku": "4360907"
+    }
+  }
+}
