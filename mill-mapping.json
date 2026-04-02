@@ -1,0 +1,83 @@
+{
+  "636702789303": {
+    "name": "NutriMill Harvest Grain Mill - Bronze Trim",
+    "square_item_id": "2S6HUCTIK2EXZ2IABGV2SQKE",
+    "square_variation_id": "VN3PGW3C2IRED5K4BIZBJQ46",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_product_id": 4037,
+    "bc_variant_id": 8437,
+    "sku": "636702789303"
+  },
+  "636702789006": {
+    "name": "NutriMill Harvest Grain Mill - Black Trim",
+    "square_item_id": "2S6HUCTIK2EXZ2IABGV2SQKE",
+    "square_variation_id": "OXBIT3MDYCG22RX7WRSKSEIQ",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_product_id": 4037,
+    "bc_variant_id": 8438,
+    "sku": "636702789006"
+  },
+  "636702789105": {
+    "name": "NutriMill Harvest Grain Mill - Gold Trim",
+    "square_item_id": "2S6HUCTIK2EXZ2IABGV2SQKE",
+    "square_variation_id": "Y2Z3O2ME4PUYXXYVBACFZ2ZX",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_product_id": 4037,
+    "bc_variant_id": 8439,
+    "sku": "636702789105"
+  },
+  "636702789150": {
+    "name": "NutriMill Harvest Grain Mill - Silver Trim",
+    "square_item_id": "2S6HUCTIK2EXZ2IABGV2SQKE",
+    "square_variation_id": "K7TOZ2WATMK7RDYJTNMYE3WY",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_product_id": 4037,
+    "bc_variant_id": 8440,
+    "sku": "636702789150"
+  },
+  "636702789358": {
+    "name": "NutriMill Harvest Grain Mill - White Trim",
+    "square_item_id": "2S6HUCTIK2EXZ2IABGV2SQKE",
+    "square_variation_id": "46QLBHZ3N7JVL36DMJF6MHA7",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_product_id": 4037,
+    "bc_variant_id": 8441,
+    "sku": "636702789358"
+  },
+  "636702789501": {
+    "name": "NutriMill Harvest Grain Mill - Red Trim",
+    "square_item_id": "2S6HUCTIK2EXZ2IABGV2SQKE",
+    "square_variation_id": "MAKGIVBS3ZZZGHN4TADZ4C22",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_product_id": 4037,
+    "bc_variant_id": 8442,
+    "sku": "636702789501"
+  },
+  "636702789402": {
+    "name": "NutriMill Harvest Grain Mill - Green Trim",
+    "square_item_id": "2S6HUCTIK2EXZ2IABGV2SQKE",
+    "square_variation_id": "XCAFMNHEUB7T2OGCA3ZCT34Z",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_product_id": 4037,
+    "bc_variant_id": 8443,
+    "sku": "636702789402"
+  },
+  "636702760203": {
+    "name": "NutriMill Classic Grain Mill",
+    "square_item_id": "M7IB76SVWQ3JXI5GJBGPGPVV",
+    "square_variation_id": "HK4265OJDJHQURJKVBMVJNVD",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_product_id": 4034,
+    "bc_variant_id": 7071,
+    "sku": "636702760203"
+  },
+  "636702790705": {
+    "name": "NutriMill Impact Grain Mill",
+    "square_item_id": "5UFPMISL7GFMNDSXVCDR7VIG",
+    "square_variation_id": "AV2QIERGP5NOBLGCLCTNSZI5",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_product_id": 4033,
+    "bc_variant_id": 7068,
+    "sku": "636702790705"
+  }
+}
