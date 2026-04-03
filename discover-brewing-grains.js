@@ -25,7 +25,7 @@ const fs = require('fs');
 const path = require('path');
 
 // --- Config ---
-const SQ_TOKEN = process.env.SQUARE_ACCESS_TOKEN;
+const SQ_TOKEN = process.env.SQUARE_ACCESS_TOKEN || process.env.SQ_ACCESS_TOKEN;
 const BC_TOKEN = process.env.BC_ACCESS_TOKEN;
 const BC_STORE  = process.env.BC_STORE_HASH || 'h1uvrm9fjd';
 const SQ_API   = 'https://connect.squareup.com/v2';
