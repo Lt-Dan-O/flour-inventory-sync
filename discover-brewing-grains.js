@@ -1,168 +1,241 @@
 #!/usr/bin/env node
 /**
- * BC Discovery Script for Brewing Grain Mapping
+ * Brewing Grain Mapping Builder + BC Discovery
  *
- * Searches BigCommerce for brewing grain products and matches them to Square
- * bulk variants by SKU. Populates the bc_per_oz field in brewing-grain-mapping.json.
+ * Self-contained script that:
+ * 1. Queries Square catalog for all items in the Brewing Grains category
+ * 2. Builds the mapping with bulk/bag variant identification
+ * 3. Queries BigCommerce to find matching "by the OUNCE" variants
+ * 4. Saves the complete brewing-grain-mapping.json
  *
- * Usage:
- *   BC_ACCESS_TOKEN=xxx node discover-brewing-grains.js
- *
- * Or if running on Render where env vars are already set:
+ * Usage (on Render where env vars are set):
  *   node discover-brewing-grains.js
  *
- * Strategy: For each Square SKU in the mapping, query BC's "get variants by SKU"
- * endpoint to find the matching variant directly (much faster than scanning all products).
+ * Or locally:
+ *   SQUARE_ACCESS_TOKEN=xxx BC_ACCESS_TOKEN=xxx node discover-brewing-grains.js
+ *
+ * Environment variables:
+ *   SQUARE_ACCESS_TOKEN  - Square API token
+ *   BC_ACCESS_TOKEN      - BigCommerce API token
+ *   BC_STORE_HASH        - BC store hash (default: h1uvrm9fjd)
  */
 
 const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
 
-const BC_STORE_HASH   = process.env.BC_STORE_HASH || 'h1uvrm9fjd';
-const BC_ACCESS_TOKEN = process.env.BC_ACCESS_TOKEN;
-const BC_API = `https://api.bigcommerce.com/stores/${BC_STORE_HASH}`;
+// --- Config ---
+const SQ_TOKEN = process.env.SQUARE_ACCESS_TOKEN;
+const BC_TOKEN = process.env.BC_ACCESS_TOKEN;
+const BC_STORE  = process.env.BC_STORE_HASH || 'h1uvrm9fjd';
+const SQ_API   = 'https://connect.squareup.com/v2';
+const BC_API   = `https://api.bigcommerce.com/stores/${BC_STORE}`;
+const LOCATION = 'D7QJPMPVZME4K';
+const BREWING_GRAINS_CATEGORY = 'CQM5GLJF3UQ6H6TUUGP5C6C2';
+const MEASUREMENT_UNIT_OZ = 'XAZRNKPDPUK47YOPZO6TZG6Q';
+const OUTPUT   = path.join(__dirname, 'brewing-grain-mapping.json');
 
-if (!BC_ACCESS_TOKEN) {
-  console.error('ERROR: BC_ACCESS_TOKEN environment variable is required.');
-  console.error('Usage: BC_ACCESS_TOKEN=xxx node discover-brewing-grains.js');
-  process.exit(1);
-}
+if (!SQ_TOKEN) { console.error('ERROR: SQUARE_ACCESS_TOKEN required'); process.exit(1); }
+if (!BC_TOKEN) { console.error('ERROR: BC_ACCESS_TOKEN required'); process.exit(1); }
 
-function bcHeaders() {
-  return {
-    'X-Auth-Token': BC_ACCESS_TOKEN,
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  };
-}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-async function bcGet(urlPath) {
-  const res = await fetch(`${BC_API}${urlPath}`, { headers: bcHeaders() });
-  if (res.status === 404) return null;
-  if (res.status === 429) {
-    // Rate limited — wait and retry
-    const retryAfter = parseInt(res.headers.get('X-Rate-Limit-Time-Reset-Ms') || '1500', 10);
-    console.log(`  Rate limited, waiting ${retryAfter}ms...`);
-    await new Promise(r => setTimeout(r, retryAfter));
-    return bcGet(urlPath);
-  }
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`BC GET ${urlPath}: ${res.status} - ${text}`);
-  }
+// --- Square helpers ---
+async function sqPost(endpoint, body) {
+  const res = await fetch(`${SQ_API}${endpoint}`, {
+    method: 'POST', headers: { 'Authorization': `Bearer ${SQ_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error(`Square ${endpoint}: ${res.status} - ${await res.text()}`);
   return res.json();
 }
 
-async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+// --- BC helpers ---
+async function bcGet(urlPath) {
+  const res = await fetch(`${BC_API}${urlPath}`, {
+    headers: { 'X-Auth-Token': BC_TOKEN, 'Content-Type': 'application/json', 'Accept': 'application/json' }
+  });
+  if (res.status === 404) return null;
+  if (res.status === 429) {
+    const wait = parseInt(res.headers.get('X-Rate-Limit-Time-Reset-Ms') || '2000', 10);
+    console.log(`  Rate limited, waiting ${wait}ms...`);
+    await sleep(wait);
+    return bcGet(urlPath);
+  }
+  if (!res.ok) throw new Error(`BC GET ${urlPath}: ${res.status} - ${await res.text()}`);
+  return res.json();
+}
 
-async function discoverBrewingGrains() {
-  // Load the existing mapping (Square-side data)
-  const mappingPath = path.join(__dirname, 'brewing-grain-mapping.json');
-  if (!fs.existsSync(mappingPath)) {
-    console.error('ERROR: brewing-grain-mapping.json not found in', __dirname);
-    process.exit(1);
+// --- Step 1: Build mapping from Square catalog ---
+async function buildMappingFromSquare() {
+  console.log('=== Step 1: Querying Square catalog for Brewing Grains ===\n');
+
+  // Search for all items in the Brewing Grains category
+  let cursor = null;
+  const allItems = [];
+  do {
+    const body = {
+      object_types: ['ITEM'],
+      query: {
+        exact_query: { attribute_name: 'category_id', attribute_value: BREWING_GRAINS_CATEGORY }
+      },
+      limit: 100
+    };
+    if (cursor) body.cursor = cursor;
+    const result = await sqPost('/catalog/search', body);
+    if (result.objects) allItems.push(...result.objects);
+    cursor = result.cursor;
+  } while (cursor);
+
+  console.log(`Found ${allItems.length} items in Brewing Grains category.\n`);
+
+  const mapping = {};
+
+  for (const item of allItems) {
+    const itemName = item.item_data?.name || 'Unknown';
+    const variations = item.item_data?.variations || [];
+
+    // Identify bulk variant (has measurement_unit_id for oz) and bag variants (no measurement_unit)
+    let bulkVariant = null;
+    const bagVariants = [];
+
+    for (const v of variations) {
+      const vData = v.item_variation_data || {};
+      const muId = vData.measurement_unit_id;
+
+      if (muId === MEASUREMENT_UNIT_OZ) {
+        bulkVariant = v;
+      } else if (!muId) {
+        // Check if this is a bag variant (name contains "bag" or "lbs" or weight pattern)
+        const vName = (vData.name || '').toLowerCase();
+        const isBag = vName.includes('bag') || vName.includes('lbs') || vName.includes('lb');
+        if (isBag) {
+          // Determine bag size
+          let bagLbs = 50; // default
+          let bagOz = 800;
+          if (vName.includes('55lb') || vName.includes('55 lb')) { bagLbs = 55; bagOz = 880; }
+          else if (vName.match(/50\s*lb/)) { bagLbs = 50; bagOz = 800; }
+          else if (vName.match(/25\s*lb/)) { bagLbs = 25; bagOz = 400; }
+          else if (vName.match(/10\s*lb/)) { bagLbs = 10; bagOz = 160; }
+          // 55lbs bags pattern
+          if (vName.includes('55lbs')) { bagLbs = 55; bagOz = 880; }
+
+          bagVariants.push({
+            square_variation_id: v.id,
+            name: vData.name,
+            bag_lbs: bagLbs,
+            bag_oz: bagOz
+          });
+        }
+      }
+    }
+
+    if (!bulkVariant) {
+      console.log(`  SKIP: ${itemName} - no bulk (oz) variant found`);
+      continue;
+    }
+
+    const bulkSku = bulkVariant.item_variation_data?.sku || '';
+    if (!bulkSku) {
+      console.log(`  WARN: ${itemName} - bulk variant has no SKU`);
+      continue;
+    }
+
+    mapping[bulkSku] = {
+      name: itemName,
+      square_item_id: item.id,
+      square_bulk_variation_id: bulkVariant.id,
+      square_bulk_sku: bulkSku,
+      square_location_id: LOCATION,
+      bag_variants: bagVariants,
+      bc_per_oz: null
+    };
+
+    const bagInfo = bagVariants.length > 0
+      ? ` (${bagVariants.length} bag variants: ${bagVariants.map(b => b.bag_lbs + 'lb').join(', ')})`
+      : '';
+    console.log(`  ✓ ${itemName} [SKU: ${bulkSku}]${bagInfo}`);
   }
 
-  const mapping = JSON.parse(fs.readFileSync(mappingPath, 'utf8'));
-  const entries = Object.entries(mapping);
+  console.log(`\nBuilt mapping with ${Object.keys(mapping).length} entries.\n`);
+  return mapping;
+}
 
-  console.log(`Loaded ${entries.length} grain entries from mapping.\n`);
-  console.log('Looking up each SKU in BigCommerce...\n');
+// --- Step 2: Discover BC variants ---
+async function discoverBCVariants(mapping) {
+  console.log('=== Step 2: Discovering BigCommerce variants ===\n');
 
-  let matched = 0;
-  let noVariant = [];
-  let notFound = [];
-  let alreadySet = 0;
+  let matched = 0, notFound = 0, ambiguous = 0;
 
-  for (const [key, entry] of entries) {
-    const sku = entry.square_bulk_sku;
-    if (!sku) {
-      notFound.push({ key, name: entry.name, reason: 'No Square SKU' });
-      continue;
-    }
-
-    // Skip if bc_per_oz is already populated
-    if (entry.bc_per_oz) {
-      alreadySet++;
-      console.log(`  – ${entry.name} (SKU: ${sku}) — already mapped`);
-      continue;
-    }
-
+  for (const [sku, entry] of Object.entries(mapping)) {
     // Query BC for variants matching this SKU
-    // The V3 catalog search endpoint can filter by SKU
     const data = await bcGet(`/v3/catalog/variants?sku=${encodeURIComponent(sku)}&include_fields=id,product_id,sku,option_values`);
 
     if (!data || !data.data || data.data.length === 0) {
-      notFound.push({ key, name: entry.name, sku });
-      console.log(`  ✗ ${entry.name} (SKU: ${sku}) — not found in BC`);
-      await sleep(200); // gentle rate limiting
-      continue;
-    }
-
-    // Find the variant — if multiple results, prefer one whose option label includes "OUNCE"
-    let bestVariant = data.data[0];
-    if (data.data.length > 1) {
-      const ozMatch = data.data.find(v =>
-        (v.option_values || []).some(ov => ov.label && ov.label.includes('OUNCE'))
-      );
-      if (ozMatch) bestVariant = ozMatch;
-    }
-
-    // Check that this variant is the "by the OUNCE" variant
-    const labels = (bestVariant.option_values || []).map(ov => ov.label).join(' ');
-    const isOzVariant = labels.includes('OUNCE') || data.data.length === 1;
-
-    if (!isOzVariant) {
-      noVariant.push({
-        key, name: entry.name, sku,
-        bc_product_id: bestVariant.product_id,
-        labels
-      });
-      console.log(`  ? ${entry.name} (SKU: ${sku}) — found but not OUNCE variant (labels: ${labels})`);
+      notFound++;
+      console.log(`  ✗ ${entry.name} (SKU: ${sku}) — not in BC`);
       await sleep(200);
       continue;
     }
 
-    // Populate bc_per_oz
-    mapping[key].bc_per_oz = {
-      product_id: bestVariant.product_id,
-      variant_id: bestVariant.id,
-      sku: bestVariant.sku
+    // Prefer variant whose option label includes "OUNCE"
+    let best = data.data[0];
+    if (data.data.length > 1) {
+      const ozMatch = data.data.find(v =>
+        (v.option_values || []).some(ov => ov.label && ov.label.includes('OUNCE'))
+      );
+      if (ozMatch) best = ozMatch;
+      else { ambiguous++; }
+    }
+
+    mapping[sku].bc_per_oz = {
+      product_id: best.product_id,
+      variant_id: best.id,
+      sku: best.sku
     };
     matched++;
-    console.log(`  ✓ ${entry.name} → BC product ${bestVariant.product_id} / variant ${bestVariant.id} (SKU: ${bestVariant.sku})`);
-
-    await sleep(200); // gentle rate limiting
+    console.log(`  ✓ ${entry.name} → BC product ${best.product_id} / variant ${best.id}`);
+    await sleep(200);
   }
 
-  // Results summary
-  console.log(`\n=== Discovery Results ===`);
-  console.log(`Already mapped: ${alreadySet}`);
-  console.log(`Newly matched: ${matched}`);
-  console.log(`Not found in BC: ${notFound.length}`);
-  console.log(`Found but not OUNCE variant: ${noVariant.length}`);
-
-  if (notFound.length > 0) {
-    console.log(`\n--- Not Found in BC (${notFound.length}) ---`);
-    for (const u of notFound) {
-      console.log(`  ${u.name} (SKU: ${u.sku || 'NULL'})`);
-    }
-  }
-
-  if (noVariant.length > 0) {
-    console.log(`\n--- Found but Not OUNCE Variant (${noVariant.length}) ---`);
-    for (const u of noVariant) {
-      console.log(`  ${u.name} (SKU: ${u.sku}, BC Product: ${u.bc_product_id}, Labels: ${u.labels})`);
-    }
-  }
-
-  // Save updated mapping
-  fs.writeFileSync(mappingPath, JSON.stringify(mapping, null, 2));
-  console.log(`\nUpdated mapping saved to ${mappingPath}`);
+  console.log(`\n=== BC Discovery Results ===`);
+  console.log(`Matched: ${matched}`);
+  console.log(`Not found: ${notFound}`);
+  if (ambiguous > 0) console.log(`Ambiguous (used first): ${ambiguous}`);
 }
 
-discoverBrewingGrains().catch(err => {
-  console.error('Discovery failed:', err.message);
-  process.exit(1);
-});
+// --- Main ---
+async function main() {
+  // Load existing mapping if it exists, otherwise build from Square
+  let mapping;
+  if (fs.existsSync(OUTPUT)) {
+    console.log('Found existing brewing-grain-mapping.json, loading...\n');
+    mapping = JSON.parse(fs.readFileSync(OUTPUT, 'utf8'));
+    console.log(`Loaded ${Object.keys(mapping).length} entries.\n`);
+
+    // Check if any bc_per_oz are missing
+    const missing = Object.values(mapping).filter(e => !e.bc_per_oz).length;
+    if (missing === 0) {
+      console.log('All entries already have bc_per_oz. Nothing to do!');
+      return;
+    }
+    console.log(`${missing} entries missing bc_per_oz, running BC discovery...\n`);
+  } else {
+    console.log('No existing mapping found. Building from Square catalog...\n');
+    mapping = await buildMappingFromSquare();
+  }
+
+  // Discover BC variants
+  await discoverBCVariants(mapping);
+
+  // Save
+  fs.writeFileSync(OUTPUT, JSON.stringify(mapping, null, 2));
+  console.log(`\nSaved ${Object.keys(mapping).length} entries to ${OUTPUT}`);
+
+  // Summary
+  const withBC = Object.values(mapping).filter(e => e.bc_per_oz).length;
+  const withBags = Object.values(mapping).filter(e => e.bag_variants.length > 0).length;
+  console.log(`\nFinal: ${Object.keys(mapping).length} total, ${withBC} with BC mapping, ${withBags} with bag correction`);
+}
+
+main().catch(err => { console.error('FATAL:', err.message); process.exit(1); });
