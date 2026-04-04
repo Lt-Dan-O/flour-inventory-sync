@@ -1646,6 +1646,11 @@ app.get('/discover-brewing-grains', async (req, res) => {
   });
 });
 
+// ── Serve current brewing grain mapping (for backup / repo commit) ──────────
+app.get('/api/brewing-grain-mapping', (req, res) => {
+  res.json(brewGrainMapping);
+});
+
 // ── Health check ────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
   const flourCount = Object.values(bcVariantToGrain).filter(v => v.type === 'flour').length;
