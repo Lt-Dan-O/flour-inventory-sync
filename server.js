@@ -1611,6 +1611,37 @@ app.get('/discover-brewing-grains', async (req, res) => {
       return res.status(500).json({ error: err.message, stdout, stderr });
     }
     console.log('Brewing grain discovery completed:\n', stdout);
+
+    // Hot-reload the mapping into memory
+    try {
+      const mappingPath = require('path').join(__dirname, 'brewing-grain-mapping.json');
+      delete require.cache[require.resolve(mappingPath)];
+      brewGrainMapping = require(mappingPath);
+      console.log(`Hot-reloaded brewing-grain-mapping.json: ${Object.keys(brewGrainMapping).length} entries`);
+
+      // Rebuild lookup tables
+      for (const key of Object.keys(sqVariationToBrewGrain)) delete sqVariationToBrewGrain[key];
+      for (const key of Object.keys(sqBagVariationToBrewGrain)) delete sqBagVariationToBrewGrain[key];
+      for (const key of Object.keys(bcVariantToBrewGrain)) delete bcVariantToBrewGrain[key];
+
+      for (const [brewSku, entry] of Object.entries(brewGrainMapping)) {
+        if (entry.square_bulk_variation_id) {
+          sqVariationToBrewGrain[entry.square_bulk_variation_id] = brewSku;
+        }
+        if (entry.bag_variants && entry.bag_variants.length > 0) {
+          for (const bag of entry.bag_variants) {
+            sqBagVariationToBrewGrain[bag.square_variation_id] = brewSku;
+          }
+        }
+        if (entry.bc_per_oz) {
+          bcVariantToBrewGrain[entry.bc_per_oz] = { brewSku, units: 1, type: 'brew_grain' };
+        }
+      }
+      console.log(`Brew grain lookups rebuilt: ${Object.keys(sqVariationToBrewGrain).length} bulk, ${Object.keys(sqBagVariationToBrewGrain).length} bag, ${Object.keys(bcVariantToBrewGrain).length} BC`);
+    } catch (reloadErr) {
+      console.error('Failed to hot-reload brewing grain mapping:', reloadErr.message);
+    }
+
     res.json({ status: 'ok', output: stdout, errors: stderr || null });
   });
 });
