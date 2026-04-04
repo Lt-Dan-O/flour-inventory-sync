@@ -522,6 +522,37 @@ async function adjustSquareInventory(variationId, adjustment) {
   return res.json();
 }
 
+/** Set Square inventory to an exact quantity via physical count */
+async function setSquareInventory(variationId, quantity) {
+  const idempotencyKey = `phys-${variationId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+  const change = {
+    type: 'PHYSICAL_COUNT',
+    physical_count: {
+      catalog_object_id: variationId,
+      location_id: SQ_LOCATION_ID,
+      quantity: String(quantity),
+      state: 'IN_STOCK',
+      occurred_at: new Date().toISOString()
+    }
+  };
+
+  const res = await fetch(`${SQ_API}/inventory/changes/batch-create`, {
+    method: 'POST',
+    headers: sqHeaders(),
+    body: JSON.stringify({
+      idempotency_key: idempotencyKey,
+      changes: [change]
+    })
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Square physical count: ${res.status} - ${text}`);
+  }
+  return res.json();
+}
+
 /** Fetch all pending/unshipped BC orders and sum reserved oz per coffee SKU */
 async function getReservedOz() {
   const reserved = {};  // coffeeSku → total oz reserved
@@ -845,12 +876,14 @@ async function brewGrainBagToBulk(bagVariationId) {
   console.log(`  [BREW BAG] ${bagInfo.bag_name}: count=${bagCount}, converting to ${ozAdjustment} oz adjustment on bulk`);
 
   try {
-    // Adjust bulk variant
-    await adjustSquareInventory(entry.square_bulk_variation_id, ozAdjustment);
-    console.log(`  [BREW BAG] → Bulk adjusted by ${ozAdjustment} oz`);
+    // Get current bulk count, then set new value via physical count
+    const currentBulk = await getSquareCount(entry.square_bulk_variation_id);
+    const newBulk = currentBulk + ozAdjustment;
+    await setSquareInventory(entry.square_bulk_variation_id, newBulk);
+    console.log(`  [BREW BAG] → Bulk set from ${currentBulk} to ${newBulk} oz (${ozAdjustment > 0 ? '+' : ''}${ozAdjustment})`);
 
-    // Reset bag variant to 0 (adjust by negative of current count)
-    await adjustSquareInventory(bagVariationId, -bagCount);
+    // Reset bag variant to 0 via physical count
+    await setSquareInventory(bagVariationId, 0);
     console.log(`  [BREW BAG] → Bag reset to 0`);
 
     return true;  // signal that bulk was modified
@@ -1196,9 +1229,13 @@ async function fullReconciliation() {
           if (bagCount !== 0) {
             console.log(`  [BREW BAG] ${bag.name}: count=${bagCount}, correcting...`);
             const ozAdjust = bagCount * bag.bag_oz;
-            await adjustSquareInventory(entry.square_bulk_variation_id, ozAdjust);
-            await adjustSquareInventory(bag.square_variation_id, -bagCount);
-            console.log(`  [BREW BAG] → Bulk adjusted by ${ozAdjust} oz, bag reset to 0`);
+            const currentBulk = bulkCounts.has(entry.square_bulk_variation_id)
+              ? bulkCounts.get(entry.square_bulk_variation_id)
+              : await getSquareCount(entry.square_bulk_variation_id);
+            const newBulk = currentBulk + ozAdjust;
+            await setSquareInventory(entry.square_bulk_variation_id, newBulk);
+            await setSquareInventory(bag.square_variation_id, 0);
+            console.log(`  [BREW BAG] → Bulk set from ${currentBulk} to ${newBulk} oz, bag reset to 0`);
             bagCorrected++;
           }
         } catch (e) {
