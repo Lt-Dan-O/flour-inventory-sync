@@ -1634,7 +1634,7 @@ app.get('/discover-brewing-grains', async (req, res) => {
           }
         }
         if (entry.bc_per_oz) {
-          bcVariantToBrewGrain[entry.bc_per_oz] = { brewSku, units: 1, type: 'brew_grain' };
+          bcVariantToBrewGrain[entry.bc_per_oz.variant_id] = { brewGrainSku: brewSku, oz: 1, type: 'brewgrain' };
         }
       }
       console.log(`Brew grain lookups rebuilt: ${Object.keys(sqVariationToBrewGrain).length} bulk, ${Object.keys(sqBagVariationToBrewGrain).length} bag, ${Object.keys(bcVariantToBrewGrain).length} BC`);
