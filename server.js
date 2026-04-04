@@ -124,6 +124,11 @@ for (const [millSku, entry] of Object.entries(millMapping)) {
   bcVariantToMill[entry.bc_variant_id] = { millSku, units: 1, type: 'mill' };
 }
 
+// Lock set to prevent concurrent bag-to-bulk corrections on the same variation
+const bagCorrectionInProgress = new Set();
+// Deduplication cache: track recently processed webhook events (variation → timestamp)
+const recentBagWebhooks = new Map();
+
 // Build static lookups from brewing-grain-mapping.json
 for (const [brewSku, entry] of Object.entries(brewGrainMapping)) {
   if (entry.square_bulk_variation_id) {
@@ -858,24 +863,32 @@ async function brewGrainBagToBulk(bagVariationId) {
   const bagInfo = sqBagVariationToBrewGrain[bagVariationId];
   if (!bagInfo) return false;
 
-  const entry = brewGrainMapping[bagInfo.brewGrainSku];
-  if (!entry) return false;
-
-  // Get current bag count
-  const bagCount = await getSquareCount(bagVariationId);
-  if (bagCount === 0) {
-    console.log(`  [BREW BAG] ${bagInfo.bag_name}: count is 0, no correction needed`);
+  // Prevent concurrent corrections on the same bag variation
+  if (bagCorrectionInProgress.has(bagVariationId)) {
+    console.log(`  [BREW BAG] ${bagInfo.bag_name}: correction already in progress, skipping`);
     return false;
   }
-
-  // Convert bag count to oz adjustment for bulk
-  // Negative bag count (sold) → negative oz (deduct from bulk)
-  // Positive bag count (received) → positive oz (add to bulk)
-  const ozAdjustment = bagCount * bagInfo.bag_oz;
-
-  console.log(`  [BREW BAG] ${bagInfo.bag_name}: count=${bagCount}, converting to ${ozAdjustment} oz adjustment on bulk`);
+  bagCorrectionInProgress.add(bagVariationId);
 
   try {
+    const entry = brewGrainMapping[bagInfo.brewGrainSku];
+    if (!entry) { bagCorrectionInProgress.delete(bagVariationId); return false; }
+
+    // Get current bag count
+    const bagCount = await getSquareCount(bagVariationId);
+    if (bagCount === 0) {
+      console.log(`  [BREW BAG] ${bagInfo.bag_name}: count is 0, no correction needed`);
+      bagCorrectionInProgress.delete(bagVariationId);
+      return false;
+    }
+
+    // Convert bag count to oz adjustment for bulk
+    // Negative bag count (sold) → negative oz (deduct from bulk)
+    // Positive bag count (received) → positive oz (add to bulk)
+    const ozAdjustment = bagCount * bagInfo.bag_oz;
+
+    console.log(`  [BREW BAG] ${bagInfo.bag_name}: count=${bagCount}, converting to ${ozAdjustment} oz adjustment on bulk`);
+
     // Get current bulk count, then set new value via physical count
     const currentBulk = await getSquareCount(entry.square_bulk_variation_id);
     const newBulk = currentBulk + ozAdjustment;
@@ -890,6 +903,8 @@ async function brewGrainBagToBulk(bagVariationId) {
   } catch (e) {
     console.error(`  [BREW BAG] ERROR: ${e.message}`);
     return false;
+  } finally {
+    bagCorrectionInProgress.delete(bagVariationId);
   }
 }
 
@@ -1088,6 +1103,19 @@ app.post('/webhooks/square-inventory', async (req, res) => {
     // Check brewing grain bag variant (bag-to-bulk correction)
     const bagInfo = sqBagVariationToBrewGrain[entityId];
     if (bagInfo) {
+      // Dedup: ignore duplicate webhooks for same bag within 30 seconds
+      const lastProcessed = recentBagWebhooks.get(entityId);
+      if (lastProcessed && (Date.now() - lastProcessed) < 30000) {
+        console.log(`\n=== Square BAG webhook for ${bagInfo.bag_name}: duplicate within 30s, skipping ===\n`);
+        return;
+      }
+      recentBagWebhooks.set(entityId, Date.now());
+      // Cleanup old entries every so often
+      if (recentBagWebhooks.size > 200) {
+        const cutoff = Date.now() - 60000;
+        for (const [k, v] of recentBagWebhooks) { if (v < cutoff) recentBagWebhooks.delete(k); }
+      }
+
       console.log(`\n=== Square inventory changed for brewing grain BAG: ${bagInfo.bag_name} ===`);
       await new Promise(r => setTimeout(r, 2000));
       const bulkModified = await brewGrainBagToBulk(entityId);
@@ -1223,20 +1251,30 @@ async function fullReconciliation() {
       if (!entry.bag_variants || entry.bag_variants.length === 0) continue;
       for (const bag of entry.bag_variants) {
         try {
+          // Skip if webhook is already handling this bag
+          if (bagCorrectionInProgress.has(bag.square_variation_id)) {
+            console.log(`  [BREW BAG] ${bag.name}: correction already in progress (webhook), skipping`);
+            continue;
+          }
           const bagCount = bulkCounts.has(bag.square_variation_id)
             ? bulkCounts.get(bag.square_variation_id)
             : await getSquareCount(bag.square_variation_id);
           if (bagCount !== 0) {
-            console.log(`  [BREW BAG] ${bag.name}: count=${bagCount}, correcting...`);
-            const ozAdjust = bagCount * bag.bag_oz;
-            const currentBulk = bulkCounts.has(entry.square_bulk_variation_id)
-              ? bulkCounts.get(entry.square_bulk_variation_id)
-              : await getSquareCount(entry.square_bulk_variation_id);
-            const newBulk = currentBulk + ozAdjust;
-            await setSquareInventory(entry.square_bulk_variation_id, newBulk);
-            await setSquareInventory(bag.square_variation_id, 0);
-            console.log(`  [BREW BAG] → Bulk set from ${currentBulk} to ${newBulk} oz, bag reset to 0`);
-            bagCorrected++;
+            bagCorrectionInProgress.add(bag.square_variation_id);
+            try {
+              console.log(`  [BREW BAG] ${bag.name}: count=${bagCount}, correcting...`);
+              const ozAdjust = bagCount * bag.bag_oz;
+              const currentBulk = bulkCounts.has(entry.square_bulk_variation_id)
+                ? bulkCounts.get(entry.square_bulk_variation_id)
+                : await getSquareCount(entry.square_bulk_variation_id);
+              const newBulk = currentBulk + ozAdjust;
+              await setSquareInventory(entry.square_bulk_variation_id, newBulk);
+              await setSquareInventory(bag.square_variation_id, 0);
+              console.log(`  [BREW BAG] → Bulk set from ${currentBulk} to ${newBulk} oz, bag reset to 0`);
+              bagCorrected++;
+            } finally {
+              bagCorrectionInProgress.delete(bag.square_variation_id);
+            }
           }
         } catch (e) {
           console.error(`  [BREW BAG] ERROR correcting ${bag.name}: ${e.message}`);
