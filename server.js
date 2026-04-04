@@ -499,7 +499,7 @@ async function adjustSquareInventory(variationId, adjustment) {
     adjustment: {
       catalog_object_id: variationId,
       location_id: SQ_LOCATION_ID,
-      quantity: String(adjustment),
+      quantity: String(Math.abs(adjustment)),
       from_state: adjustment < 0 ? 'IN_STOCK' : 'NONE',
       to_state: adjustment < 0 ? 'NONE' : 'IN_STOCK',
       occurred_at: new Date().toISOString()
