@@ -1,0 +1,1221 @@
+{
+  "5890706": {
+    "name": "Coffee Malt",
+    "square_item_id": "O67PJRBUJRNVEHLIBAW2UU7C",
+    "square_bulk_variation_id": "CCMTBDRQXVTBO6K3Q2YTYL5S",
+    "square_bulk_sku": "5890706",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": null
+  },
+  "8554799": {
+    "name": "Pale Ale Malt",
+    "square_item_id": "EMGALH2FPCENOB76HARVBL5G",
+    "square_bulk_variation_id": "6B3MLFAUGKRCQABLJVGZ5KVJ",
+    "square_bulk_sku": "8554799",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "HRCKADJKF5FY4DUW5BTGTEMS",
+        "name": "Pale Ale Malt, 50lbs Bag",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 2590,
+      "variant_id": 7845,
+      "sku": "8554799"
+    }
+  },
+  "FLRY": {
+    "name": "Flaked Rye",
+    "square_item_id": "Q24VNKCGV7SDRKSWNFQBJM7L",
+    "square_bulk_variation_id": "UX4GK4KZPEGV2RXREYRUIEMN",
+    "square_bulk_sku": "FLRY",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "6FJNJZUUVVDVN2LB2T3QL6AI",
+        "name": "50lb Bag Flaked Rye",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 2482,
+      "variant_id": 7720,
+      "sku": "FLRY"
+    }
+  },
+  "GNOA": {
+    "name": "Golden Naked Oats",
+    "square_item_id": "2BJVVACNGGWRFHMGAOHLH5MS",
+    "square_bulk_variation_id": "KPSB4ADJ446U7EZAWB23SIGX",
+    "square_bulk_sku": "GNOA",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 3352,
+      "variant_id": 7755,
+      "sku": "GNOA"
+    }
+  },
+  "mesquitebulk": {
+    "name": "Mesquite Smoke Malt",
+    "square_item_id": "WABNVVOCMSBNB2CMGV6W2474",
+    "square_bulk_variation_id": "XVNNSSUXS7VC7NUTU5LNY24B",
+    "square_bulk_sku": "mesquitebulk",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": null
+  },
+  "15L": {
+    "name": "15L Malt",
+    "square_item_id": "TNFJQU4DY5VDUP7XQWCHRCND",
+    "square_bulk_variation_id": "DBREACNQX7V5OBM7EFR3VOG5",
+    "square_bulk_sku": "15L",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": null
+  },
+  "monastique": {
+    "name": "Chateau Monastique Malt",
+    "square_item_id": "72M3QXFAY3AP2HYTSEHBWMM6",
+    "square_bulk_variation_id": "KIBPTKU67XRFD235UUPOAKYC",
+    "square_bulk_sku": "monastique",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": null
+  },
+  "SPRO": {
+    "name": "Special Roast Malt",
+    "square_item_id": "GL6TBTQJ4O7Y2YP3YY3UOSCY",
+    "square_bulk_variation_id": "HQXFPJOEIPMAAL34ZJZYQBFF",
+    "square_bulk_sku": "SPRO",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 3366,
+      "variant_id": 7868,
+      "sku": "SPRO"
+    }
+  },
+  "CMU2": {
+    "name": "CaraMunich II",
+    "square_item_id": "WX64PEOHQ3QFRGIPMBUQZ47N",
+    "square_bulk_variation_id": "CN3RFQH4C7DRPFMWKD7DESIO",
+    "square_bulk_sku": "CMU2",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 4110,
+      "variant_id": 7769,
+      "sku": "CMU2"
+    }
+  },
+  "CWHE": {
+    "name": "CaraWheat",
+    "square_item_id": "M35BY5WWV7X63Y7T7BVYNN73",
+    "square_bulk_variation_id": "HMU3NCLDBP7YYBZ7BV2P3IQ6",
+    "square_bulk_sku": "CWHE",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": null
+  },
+  "CHRY": {
+    "name": "Chocolate Rye Malt",
+    "square_item_id": "GQZEJRA34EMTQ4KFETRJEBN4",
+    "square_bulk_variation_id": "DLBGAUBWDONXFOCIZESVOEWU",
+    "square_bulk_sku": "CHRY",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": null
+  },
+  "CAR1": {
+    "name": "Carafa I",
+    "square_item_id": "DZOVS6M2YGLFOML26AF76SHY",
+    "square_bulk_variation_id": "J4OHKQPHCBQCSRM4S5BUN5DC",
+    "square_bulk_sku": "CAR1",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": null
+  },
+  "CSD1": {
+    "name": "Carafa Special I, DeHusked",
+    "square_item_id": "6KFJ3ICYPXSZHTKOVSVSSPAG",
+    "square_bulk_variation_id": "FQY3ZUZXCLPXHKIYRLMVZZO6",
+    "square_bulk_sku": "CSD1",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 3378,
+      "variant_id": 7752,
+      "sku": "CSD1"
+    }
+  },
+  "CAR3": {
+    "name": "Carafa III",
+    "square_item_id": "UZFC6CIBB2OQQXPORCXZKY3F",
+    "square_bulk_variation_id": "H5WDFXV7MAKJPT6CB5KV4I3Y",
+    "square_bulk_sku": "CAR3",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 4109,
+      "variant_id": 7768,
+      "sku": "CAR3"
+    }
+  },
+  "CHWH": {
+    "name": "Chocolate Wheat Malt",
+    "square_item_id": "ALFQ4Z2XMWQZMSOCDE2ETPKT",
+    "square_bulk_variation_id": "2DUNR5DYV233KG7DJ4VVANEJ",
+    "square_bulk_sku": "CHWH",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 3364,
+      "variant_id": 7766,
+      "sku": "CHWH"
+    }
+  },
+  "BLAC": {
+    "name": "Black Malt",
+    "square_item_id": "A4BIGKLA27CWKOXG2PMWM5J4",
+    "square_bulk_variation_id": "WCM5XM22CHCHYSFFGOR77CS4",
+    "square_bulk_sku": "BLAC",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 3376,
+      "variant_id": 7709,
+      "sku": "BLAC"
+    }
+  },
+  "CAR2": {
+    "name": "Carafa II",
+    "square_item_id": "G3P3Y42CSILZWUPYOLS4AM23",
+    "square_bulk_variation_id": "BOY3JVWLZVFMEYK6HVKXDZAT",
+    "square_bulk_sku": "CAR2",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 4108,
+      "variant_id": 7767,
+      "sku": "CAR2"
+    }
+  },
+  "FLRI": {
+    "name": "Flaked Rice",
+    "square_item_id": "2GOX5S36UYFX4QYRPISLNW5H",
+    "square_bulk_variation_id": "PCPURILB46MYV2QIO55APPLV",
+    "square_bulk_sku": "FLRI",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 4099,
+      "variant_id": 7705,
+      "sku": "FLRI"
+    }
+  },
+  "REWH": {
+    "name": "Red Wheat Malt",
+    "square_item_id": "XHRPL43ZLAR7WKVMCK437JCY",
+    "square_bulk_variation_id": "N76SEBLH6BIXT3CQHHPBUF2X",
+    "square_bulk_sku": "REWH",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "ZKFE2AQAGFA3KJEFD2TMPXSK",
+        "name": "Red Wheat Malt, 50 lb Bag",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 2606,
+      "variant_id": 7891,
+      "sku": "REWH"
+    }
+  },
+  "CSD2": {
+    "name": "Carafa Special II, DeHusked",
+    "square_item_id": "OFPUGZN5GUN6LONJ656RS3SN",
+    "square_bulk_variation_id": "B7QSPSU6ZQ35VGM7BWFMXSSV",
+    "square_bulk_sku": "CSD2",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 3379,
+      "variant_id": 7753,
+      "sku": "CSD2"
+    }
+  },
+  "GOPR": {
+    "name": "Golden Promise",
+    "square_item_id": "APQWJBZUTOLVKWRXLUTLRHZH",
+    "square_bulk_variation_id": "Y556ROVUAE4FTYJMSW42WAKI",
+    "square_bulk_sku": "GOPR",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "3DB7O336O7V3DLWQW4C3G2RV",
+        "name": "Golden Promise, 55lb",
+        "bag_lbs": 55,
+        "bag_oz": 880
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 2594,
+      "variant_id": 7668,
+      "sku": "GOPR"
+    }
+  },
+  "60L": {
+    "name": "60L Malt",
+    "square_item_id": "W4MFNIYIEGWN5LNWUIB4ZJHC",
+    "square_bulk_variation_id": "SRXXZJYDGE3EQ4JIW7K7XJZK",
+    "square_bulk_sku": "60L",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "K7SDOAZRKDL2CXBFLYDGK5XH",
+        "name": "50lbs Bag- Caramel Malt 60L (Briess)",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 3340,
+      "variant_id": 7644,
+      "sku": "60L"
+    }
+  },
+  "120L": {
+    "name": "120L Malt",
+    "square_item_id": "X4S64PA74H76Q6ZWYJQWMP67",
+    "square_bulk_variation_id": "HHASIKDJCKTBHO2B52FO56ZF",
+    "square_bulk_sku": "120L",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "ZESCIPRFSN2DWQOJMWDVFXTK",
+        "name": "50lbs Bag- Caramel Malt 120L (Briess)",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 3347,
+      "variant_id": 7651,
+      "sku": "120L"
+    }
+  },
+  "80L": {
+    "name": "80L Malt",
+    "square_item_id": "LWDIZTSMQQGXNPB4AFWURJQO",
+    "square_bulk_variation_id": "XZRCCLOLIEC72PZ6WRL3CTH2",
+    "square_bulk_sku": "80L",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "JZDVABBASU42T6IYXMHS6PC7",
+        "name": "50lbs Bag- Caramel Malt 80L (Briess)",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 3344,
+      "variant_id": 7673,
+      "sku": "80L"
+    }
+  },
+  "20L": {
+    "name": "20L Malt",
+    "square_item_id": "N77LG2J4FMFSIMK3U76STBGI",
+    "square_bulk_variation_id": "J6EDQWGYWNTVQRDGRL22GKSP",
+    "square_bulk_sku": "20L",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "UTDAXRSVNQJRCRCGT7LZFB3D",
+        "name": "50lbs Bag- Caramel Malt 20L (Briess)",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 3331,
+      "variant_id": 7654,
+      "sku": "20L"
+    }
+  },
+  "10L": {
+    "name": "10L Malt",
+    "square_item_id": "5MSETIP4AOHX6MHHN3RW2TQ7",
+    "square_bulk_variation_id": "X3T6A6KGSACJBKSPG3ZHGIDI",
+    "square_bulk_sku": "10L",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "EWTSOOCQGZWEV3PATC5WL3FC",
+        "name": "10L Malt, 50lbs bag",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": null
+  },
+  "BISC": {
+    "name": "Biscuit Malt",
+    "square_item_id": "B247VJV5GAGDIMM2ZARWPYSK",
+    "square_bulk_variation_id": "TW4WHYMRT4HQN22R2O676I53",
+    "square_bulk_sku": "BISC",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "XQNGHMAXY7RBK2FPJTLIDBXK",
+        "name": "55lbs bag- Chateau Biscuit (Castle Malting)",
+        "bag_lbs": 55,
+        "bag_oz": 880
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 3391,
+      "variant_id": 7840,
+      "sku": "BISC"
+    }
+  },
+  "MAOT": {
+    "name": "Maris Otter Malt",
+    "square_item_id": "AKEVAFKBKPTTZYYYC6UD2UEV",
+    "square_bulk_variation_id": "KL5KD22ZBP4LNXJ3MU6VCN2H",
+    "square_bulk_sku": "MAOT",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "R3J7RD4W44RF3YQI6GJQ5KDR",
+        "name": "55lb, Maris Otter (Viking)",
+        "bag_lbs": 55,
+        "bag_oz": 880
+      },
+      {
+        "square_variation_id": "SFQU6MBE5LVPXLQEPFQWMUUU",
+        "name": "Maris Otter, 55lb",
+        "bag_lbs": 55,
+        "bag_oz": 880
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 2587,
+      "variant_id": 7667,
+      "sku": "MAOT"
+    }
+  },
+  "VIEN": {
+    "name": "Vienna Malt",
+    "square_item_id": "XPMH5OZI7HRZLL5V7E5PNM3A",
+    "square_bulk_variation_id": "6TWTHYY2FORB73QYBULWQ2NM",
+    "square_bulk_sku": "VIEN",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "MA725F7XF4HW2P7TLGAHYWYC",
+        "name": "55lbs bags- Vienna Malts (Weyermann)",
+        "bag_lbs": 55,
+        "bag_oz": 880
+      },
+      {
+        "square_variation_id": "TBMN7D4Y4MQQWUS2DYT2T7VL",
+        "name": "50lbs, Vienna Bag (Briess)",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 2607,
+      "variant_id": 7824,
+      "sku": "VIEN"
+    }
+  },
+  "PILS": {
+    "name": "Pilsner Malt",
+    "square_item_id": "ESKVTOR2UHQBLDY562Y27O74",
+    "square_bulk_variation_id": "6MOUCLLBWP674FKTXGJPZXDG",
+    "square_bulk_sku": "PILS",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "R4GJ7UF7NNOS6SRQKWLKPD2F",
+        "name": "50lb, Pilsner",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      },
+      {
+        "square_variation_id": "NZUF26HWEAVCWLKGDWSV3HUY",
+        "name": "55lb, Pilsner",
+        "bag_lbs": 55,
+        "bag_oz": 880
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 2582,
+      "variant_id": 9007,
+      "sku": "PILS"
+    }
+  },
+  "MUN1": {
+    "name": "Munich Malt, 10L, Light Munich",
+    "square_item_id": "CZPRNS2ZO7ASAUGOYLUCXEWB",
+    "square_bulk_variation_id": "2NO6VTW5GHVTLLPM76FERA6U",
+    "square_bulk_sku": "MUN1",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "NBVMVPNQCCQ6E7J76PD6SNNJ",
+        "name": "Weyermann 55lb",
+        "bag_lbs": 55,
+        "bag_oz": 880
+      },
+      {
+        "square_variation_id": "WF3HXG7NZ4YTT6KFJM5J4JYH",
+        "name": "Bonlander 50lb",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 2608,
+      "variant_id": 7810,
+      "sku": "MUN1"
+    }
+  },
+  "FLOA": {
+    "name": "Flaked Oats",
+    "square_item_id": "RGAITKQBSFZDNULPHIU55I23",
+    "square_bulk_variation_id": "U3EBTZDQ5XO5O724JUPVBAGN",
+    "square_bulk_sku": "FLOA",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "ICHTJ6H73R6XC6I3IXPORRRO",
+        "name": "50lbs Flaked Oats",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 2581,
+      "variant_id": 7714,
+      "sku": "FLOA"
+    }
+  },
+  "FLWH": {
+    "name": "Flaked Wheat",
+    "square_item_id": "AMK2Y4IJNBRGF3GBLVZRQTLT",
+    "square_bulk_variation_id": "J42HBYBEM7NUXDPAOF6ZQYCX",
+    "square_bulk_sku": "FLWH",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "6MZ6NKH7HJWWGVIC4ROHJF63",
+        "name": "50lb Wheat Flakes",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 2473,
+      "variant_id": 7712,
+      "sku": "FLWH"
+    }
+  },
+  "MUN2": {
+    "name": "Munich Malt, 30L, Dark Munich",
+    "square_item_id": "SP4XL5NER3R77NZO3CVARCG5",
+    "square_bulk_variation_id": "HX5KD7W34HXT7FHBYJCOSXD4",
+    "square_bulk_sku": "MUN2",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 2610,
+      "variant_id": 7806,
+      "sku": "MUN2"
+    }
+  },
+  "40L": {
+    "name": "40L Malt",
+    "square_item_id": "PB46SEV6MFI7AXYNGHJXJNKW",
+    "square_bulk_variation_id": "DZUO7HAWKHJUKINOONFJFDIG",
+    "square_bulk_sku": "40L",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "GK3SGWC5O5F3NYH7ZESVAAJZ",
+        "name": "50lbs Bag- Caramel Malt 40L (Briess)",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 3334,
+      "variant_id": 7664,
+      "sku": "40L"
+    }
+  },
+  "AMBE": {
+    "name": "Amber Malt",
+    "square_item_id": "7Y7PVD6B5TMK26NL3GY7TNQ6",
+    "square_bulk_variation_id": "B4BVKZKU2DFTK5AYGU32QXUH",
+    "square_bulk_sku": "AMBE",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 4138,
+      "variant_id": 8103,
+      "sku": "AMBE"
+    }
+  },
+  "TORR": {
+    "name": "Torrified Wheat",
+    "square_item_id": "AYUYIIMG4FYHRR6WOZXXNUDA",
+    "square_bulk_variation_id": "SRR2V7GE2QIWGRXKQLM33KEL",
+    "square_bulk_sku": "TORR",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 4112,
+      "variant_id": 7883,
+      "sku": "TORR"
+    }
+  },
+  "AROM": {
+    "name": "Aromatic Malt",
+    "square_item_id": "HORIGEBE24FZ6C27D6DA6IPF",
+    "square_bulk_variation_id": "HZ6VHGYZBA2AYFABUCTLRRTT",
+    "square_bulk_sku": "AROM",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 3394,
+      "variant_id": 7679,
+      "sku": "AROM"
+    }
+  },
+  "DEBI": {
+    "name": "Blackprinz Malt, Debittered",
+    "square_item_id": "DBG3XC73VDLZDU72VLTIUZER",
+    "square_bulk_variation_id": "BRZOR3O2X57NYW3CQASMYPYZ",
+    "square_bulk_sku": "DEBI",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 3371,
+      "variant_id": 7747,
+      "sku": "DEBI"
+    }
+  },
+  "CARO": {
+    "name": "CaraAroma",
+    "square_item_id": "ZN66SF7NBBW3KHPTQURAGALY",
+    "square_bulk_variation_id": "L5DKKCHNA5OD3KHIICPJCCOG",
+    "square_bulk_sku": "CARO",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 3356,
+      "variant_id": 7751,
+      "sku": "CARO"
+    }
+  },
+  "DAWH": {
+    "name": "Dark Wheat Malt",
+    "square_item_id": "CU32CYZXNCR6LCORJSEHINXJ",
+    "square_bulk_variation_id": "ZOIY6BBXIPNNXCEVFYINQ2V5",
+    "square_bulk_sku": "DAWH",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 2614,
+      "variant_id": 7795,
+      "sku": "DAWH"
+    }
+  },
+  "SPEB": {
+    "name": "Special B Malt",
+    "square_item_id": "6LEFD7ZF3XXC4BQYJHBE53BX",
+    "square_bulk_variation_id": "FJX6DV2XUSJN3ZB5QLFATU23",
+    "square_bulk_sku": "SPEB",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "ENXH5DQRUZLMKURRWQQ33IHR",
+        "name": "Special B, bagged, unmilled, 5lbs",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      },
+      {
+        "square_variation_id": "OM5RCBGN3EC2JZGR7CTHJGUN",
+        "name": "Special B, bagged, unmilled, 55lb",
+        "bag_lbs": 55,
+        "bag_oz": 880
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 998,
+      "variant_id": 7740,
+      "sku": "SPEB"
+    }
+  },
+  "MELA": {
+    "name": "Melanoidin Malt",
+    "square_item_id": "QC5W4XNB4V6PKSMCVWQYWFGE",
+    "square_bulk_variation_id": "VXRJR57UJ2SU7YC2ZDOC5SUR",
+    "square_bulk_sku": "MELA",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "FCKXNY6HRYCYFZRSEPCOOHUV",
+        "name": "Melanoiden Malt, 55lbs bag",
+        "bag_lbs": 55,
+        "bag_oz": 880
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 4105,
+      "variant_id": 7739,
+      "sku": "MELA"
+    }
+  },
+  "CMU3": {
+    "name": "CaraMunich III",
+    "square_item_id": "CNLEX4HCJEGUNHKMCZOPM26U",
+    "square_bulk_variation_id": "RVPLXW3JIDLNZRJNYIENJW5S",
+    "square_bulk_sku": "CMU3",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "2YUBJM32BM7CUAFQ7LCHQN75",
+        "name": "CaraMunich III, 55lbs bag",
+        "bag_lbs": 55,
+        "bag_oz": 880
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 4111,
+      "variant_id": 7770,
+      "sku": "CMU3"
+    }
+  },
+  "VICT": {
+    "name": "Victory Malted Barley",
+    "square_item_id": "OKFATST4UE2P4A44XCQPULNV",
+    "square_bulk_variation_id": "PSYHXNCZRRHSHESQGV4CMTL7",
+    "square_bulk_sku": "VICT",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 4106,
+      "variant_id": 7746,
+      "sku": "VICT"
+    }
+  },
+  "BROW": {
+    "name": "Brown Malt",
+    "square_item_id": "7JYLY63XS7KBSR5UACJB3PJG",
+    "square_bulk_variation_id": "EPUSNTKFFAO4TVILTCS2KI7H",
+    "square_bulk_sku": "BROW",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 3368,
+      "variant_id": 7839,
+      "sku": "BROW"
+    }
+  },
+  "HONE": {
+    "name": "Honey Malt",
+    "square_item_id": "7UPSO7SWQGI44ADS525TQQMV",
+    "square_bulk_variation_id": "FN5HQVOWIQKYGLX7GNKSQMEA",
+    "square_bulk_sku": "HONE",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 999,
+      "variant_id": 7692,
+      "sku": "HONE"
+    }
+  },
+  "B300": {
+    "name": "Roasted Barley 300L",
+    "square_item_id": "3PUUFQFASNQEM6FC3XXOENXD",
+    "square_bulk_variation_id": "37KZS6GT24WYDH7FWT2YZZZS",
+    "square_bulk_sku": "B300",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": null
+  },
+  "FLCO": {
+    "name": "Flaked Corn",
+    "square_item_id": "AYAFQB4PB3P5WJ7DSAVTJS3U",
+    "square_bulk_variation_id": "S5NK5Q5GZ6HOYMQUVZPRNQUT",
+    "square_bulk_sku": "FLCO",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "MNZF6ZPFLXW7PVZ3WQCI325K",
+        "name": "50lbs Bag- Flaked Corn",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 3872,
+      "variant_id": 7708,
+      "sku": "FLCO"
+    }
+  },
+  "FLBA": {
+    "name": "Flaked Barley",
+    "square_item_id": "CFMJ7U3P43KY7WKYNDWXLPVL",
+    "square_bulk_variation_id": "EJTNXSGWNL5BEWBQ673KKWGY",
+    "square_bulk_sku": "FLBA",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "DVLDKUFU3UZ6BAK6DGHHU5HG",
+        "name": "50lbs - Flaked Barley",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 2596,
+      "variant_id": 7710,
+      "sku": "FLBA"
+    }
+  },
+  "6ROW": {
+    "name": "6-Row, Distiller's Malt",
+    "square_item_id": "DBJ5Y3R3E2DQVMTL6U7TW5RE",
+    "square_bulk_variation_id": "WFYUNLCITBIE7JPBSSNBLBOL",
+    "square_bulk_sku": "6ROW",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "Q665M7L45EN7VVDKI4V75KZH",
+        "name": "6-Row, Bagged, Milled",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      },
+      {
+        "square_variation_id": "HAU37WQ5KLPBKMD7VRGLRLQD",
+        "name": "6-Row, Bagged, Unmilled, 50lb",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      },
+      {
+        "square_variation_id": "T45HQR2CCX6PFJBGJJWBWXVN",
+        "name": "6-Row, Bagged, Unmilled, 55lbs",
+        "bag_lbs": 55,
+        "bag_oz": 880
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 2515,
+      "variant_id": 7666,
+      "sku": "6ROW"
+    }
+  },
+  "CAFO": {
+    "name": "Carafoam",
+    "square_item_id": "DMDXSTPHSF752YJEJWYW7TK7",
+    "square_bulk_variation_id": "PRJQNT7YCDKKYCPQUBKSOBRY",
+    "square_bulk_sku": "CAFO",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "TEVPQ7DMTY7W76IGBB2IVCZG",
+        "name": "55lbs bags- Carafoam (Weyermann)",
+        "bag_lbs": 55,
+        "bag_oz": 880
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 3390,
+      "variant_id": 7867,
+      "sku": "CAFO"
+    }
+  },
+  "CAPI": {
+    "name": "Carapils",
+    "square_item_id": "CJMAAEDLFMZOIRVQQH63ZHUF",
+    "square_bulk_variation_id": "6MJCXSETSAQKGTN2YXIBFYZR",
+    "square_bulk_sku": "CAPI",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "GS6RVSJZ4KGBS2XTDWEYHGDN",
+        "name": "50lbs Bag- Briess Carapils",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 997,
+      "variant_id": 7835,
+      "sku": "CAPI"
+    }
+  },
+  "WHWH": {
+    "name": "White Wheat Malt",
+    "square_item_id": "Q6GZCUKLODP7DW6SJWRWULPC",
+    "square_bulk_variation_id": "ZORF53K7ZQC3QNSNEVAGAA6S",
+    "square_bulk_sku": "WHWH",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "HL2CG3SFK6APLSFUBUVC2QYK",
+        "name": "55lbs bags- Rahr White Wheat Malt",
+        "bag_lbs": 55,
+        "bag_oz": 880
+      },
+      {
+        "square_variation_id": "MX5DNZ7P5MZC5KLLDTX5HHRB",
+        "name": "55lbs Great Western Malting White Wheat",
+        "bag_lbs": 55,
+        "bag_oz": 880
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 2586,
+      "variant_id": 7897,
+      "sku": "WHWH"
+    }
+  },
+  "RYE": {
+    "name": "Rye Malt",
+    "square_item_id": "TUDBKPKLZI7ZTLVL677IXII4",
+    "square_bulk_variation_id": "L3RSMEPHPMJMROMFQPFMFVRX",
+    "square_bulk_sku": "RYE",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "K3HNC4JH72A4TBPDLMHWEHM2",
+        "name": "55lb Sack, Rye Malt",
+        "bag_lbs": 55,
+        "bag_oz": 880
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 2483,
+      "variant_id": 7906,
+      "sku": "RYE"
+    }
+  },
+  "C300": {
+    "name": "Chocolate Malt, 300L",
+    "square_item_id": "RFDQ5XHNN3H7P4OQ4H3YXPP6",
+    "square_bulk_variation_id": "XLTTUYQZKSKEMS4CCBTRQMQW",
+    "square_bulk_sku": "C300",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 3362,
+      "variant_id": 7834,
+      "sku": "C300"
+    }
+  },
+  "RYCR": {
+    "name": "Rye Crystal- Malt",
+    "square_item_id": "ESSG6FXEXG66MOWNV26Q3Y7R",
+    "square_bulk_variation_id": "HTW2DQ4TJBM77E4NSSZPPSDA",
+    "square_bulk_sku": "RYCR",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": null
+  },
+  "PAWH": {
+    "name": "Pale Wheat",
+    "square_item_id": "SHSP6DO6H7P5KACIDNHBUJ6I",
+    "square_bulk_variation_id": "ZD7A76NWDPM3S5JOAKICCHFN",
+    "square_bulk_sku": "PAWH",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 2604,
+      "variant_id": 7777,
+      "sku": "PAWH"
+    }
+  },
+  "BESM": {
+    "name": "Beech Smoked Malt",
+    "square_item_id": "4THOYUZF77FYBMWIMLBLYIJB",
+    "square_bulk_variation_id": "BHYKP4QL5EMDRQW2QBJPLM2W",
+    "square_bulk_sku": "BESM",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 2495,
+      "variant_id": 7856,
+      "sku": "BESM"
+    }
+  },
+  "ACID": {
+    "name": "Acidulated Malt",
+    "square_item_id": "BIYYMKRS2W4BN42QI353BYAW",
+    "square_bulk_variation_id": "IKWHM6WBLZ26X3LEXHQ5V745",
+    "square_bulk_sku": "ACID",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 3384,
+      "variant_id": 7680,
+      "sku": "ACID"
+    }
+  },
+  "RIHU": {
+    "name": "Rice Hulls",
+    "square_item_id": "5MPPSNPQJFWXYGWTSOTAGE4Q",
+    "square_bulk_variation_id": "APE4VUGH4PSRHJ6RT2ZV2TET",
+    "square_bulk_sku": "RIHU",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "PQDG6GVRFLSMVVIAAGOUISSY",
+        "name": "Rice Hulls, 50lb bag",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 4101,
+      "variant_id": 7724,
+      "sku": "RIHU"
+    }
+  },
+  "GS440": {
+    "name": "Peat Smoked Malt",
+    "square_item_id": "JO2YYICX42JUW3O4QMJNPEVC",
+    "square_bulk_variation_id": "CTK3NGCEPPTYCFZT2LDKXEAF",
+    "square_bulk_sku": "GS440",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 2489,
+      "variant_id": 7917,
+      "sku": "GS440"
+    }
+  },
+  "B500": {
+    "name": "Roasted Barley 500L",
+    "square_item_id": "YFEPU6AHOLYSKF7JBPKTDHNE",
+    "square_bulk_variation_id": "WICYTMFVD3UO744S53UUJM7Y",
+    "square_bulk_sku": "B500",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": null
+  },
+  "PACH": {
+    "name": "Pale Chocolate Malt",
+    "square_item_id": "CXOGEHB66AJND22MRN4MZARO",
+    "square_bulk_variation_id": "BQOAIP4EV7E6AP6NDYLZB6Z5",
+    "square_bulk_sku": "PACH",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 3361,
+      "variant_id": 7851,
+      "sku": "PACH"
+    }
+  },
+  "CSD3": {
+    "name": "Carafa Special III, Dehusked",
+    "square_item_id": "COYIJGGQEIYQTNNXETWQDGKI",
+    "square_bulk_variation_id": "HDSLEMHGQV6GSPNROSDIPX3D",
+    "square_bulk_sku": "CSD3",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 3380,
+      "variant_id": 7754,
+      "sku": "CSD3"
+    }
+  },
+  "CV20": {
+    "name": "Caravienne 20",
+    "square_item_id": "PJQKSZYD34HNDN4GP5AFYZ5E",
+    "square_bulk_variation_id": "QVWFJW2Z6RXTPYAOG3HFJ7LL",
+    "square_bulk_sku": "CV20",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 3332,
+      "variant_id": 7657,
+      "sku": "CV20"
+    }
+  },
+  "DORO": {
+    "name": "Double Roasted Malt",
+    "square_item_id": "BANPBGZM44AM3ZTBPBLWRLRQ",
+    "square_bulk_variation_id": "DPNVWBWJERYFYJVISY3CMHX6",
+    "square_bulk_sku": "DORO",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 4140,
+      "variant_id": 8107,
+      "sku": "DORO"
+    }
+  },
+  "CMU1": {
+    "name": "CaraMunich I",
+    "square_item_id": "5KBH3L73YHVYRGKNWDMFQPB5",
+    "square_bulk_variation_id": "6V6STPLZCGG6VRZNSGA35NT5",
+    "square_bulk_sku": "CMU1",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "HOEHSDVMZK5K36HB66SVQALG",
+        "name": "CaraMunich I, 55lbs bag",
+        "bag_lbs": 55,
+        "bag_oz": 880
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 3354,
+      "variant_id": 7748,
+      "sku": "CMU1"
+    }
+  },
+  "CARY": {
+    "name": "Caramel Rye Malt",
+    "square_item_id": "IE3XC326HXHU2W6UO4D7DSIG",
+    "square_bulk_variation_id": "QL7GGP5MQH3IS7DEDTQMQU7S",
+    "square_bulk_sku": "CARY",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "6HOJOMRFRVIHQYZ37IV2QZN6",
+        "name": "Caramel Rye Malt, 50lb Bag",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 4113,
+      "variant_id": 7913,
+      "sku": "CARY"
+    }
+  },
+  "RWWG": {
+    "name": "Wheat, White, Raw",
+    "square_item_id": "463KMDOBQZAFFACS57FYFZLY",
+    "square_bulk_variation_id": "3XVX364AGDER7HVGBAVZ7JY2",
+    "square_bulk_sku": "RWWG",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 2484,
+      "variant_id": 7863,
+      "sku": "RWWG"
+    }
+  },
+  "SCDM": {
+    "name": "Scottish Distillers Malt",
+    "square_item_id": "BINGOOC7S2PB2BGKH7G3JHLX",
+    "square_bulk_variation_id": "K4CWQECHYIAMUHDGTF3RKQQI",
+    "square_bulk_sku": "SCDM",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": null
+  },
+  "CRED": {
+    "name": "CaraRed",
+    "square_item_id": "HN3LQDA2F5BEXDXSEYVRZKQQ",
+    "square_bulk_variation_id": "23BIUMZKRXEZGIDAFLQHE5AR",
+    "square_bulk_sku": "CRED",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 3355,
+      "variant_id": 7866,
+      "sku": "CRED"
+    }
+  },
+  "extraspecial": {
+    "name": "Extra Special Malt",
+    "square_item_id": "SBZS2SI6RHUQZT2QB72IL7GL",
+    "square_bulk_variation_id": "WUDHLWCSYAGUVP52HUCGDW6V",
+    "square_bulk_sku": "extraspecial",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": null
+  },
+  "GROSW": {
+    "name": "Oak Smoked Wheat",
+    "square_item_id": "FKC6EZTB6EGBTZ4H7TUYBYP6",
+    "square_bulk_variation_id": "JJ5VNWO6L3JW7ZB4WDB7JGMC",
+    "square_bulk_sku": "GROSW",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 4139,
+      "variant_id": 8105,
+      "sku": "GROSW"
+    }
+  },
+  "D437289": {
+    "name": "Cookie Malt",
+    "square_item_id": "F3GHNMAKZXVQDSUYBMKC4GKK",
+    "square_bulk_variation_id": "2ND7UXRUULYASDALEDPEP4PP",
+    "square_bulk_sku": "D437289",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 3351,
+      "variant_id": 7641,
+      "sku": "D437289"
+    }
+  },
+  "H900825": {
+    "name": "2-Row Brewers Malt, Bulk, Per Ounce",
+    "square_item_id": "NQW3W5JKQDSJWHFZUB5EMTU3",
+    "square_bulk_variation_id": "227DC6GFQ3SJEOOOX5JGX3KA",
+    "square_bulk_sku": "H900825",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "EVDGKKHUF5A6WSNZMZBKYRM5",
+        "name": "2-Row, Bag 50lb",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 2580,
+      "variant_id": 7665,
+      "sku": "H900825"
+    }
+  },
+  "832763M": {
+    "name": "Calrose Rice 70% Milled",
+    "square_item_id": "WRK65KPKMGH7SKKPDTIFT2X7",
+    "square_bulk_variation_id": "VKJUVENGO4YOJ3MMZ2CBL37N",
+    "square_bulk_sku": "832763M",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": null
+  },
+  "724612Z": {
+    "name": "Corn Flour Pre-gel Powder",
+    "square_item_id": "GQDIJILP5LL762PPT24H3N42",
+    "square_bulk_variation_id": "EB42K7CCHQEVDAJTMKGZL4UE",
+    "square_bulk_sku": "724612Z",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": null
+  }
+}
