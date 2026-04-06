@@ -1855,3 +1855,4 @@ app.listen(PORT, async () => {
     console.log(`   ⏰ Initial reconciliation in 30 seconds\n`);
   }
 });
+require('./daily-report')(app);
