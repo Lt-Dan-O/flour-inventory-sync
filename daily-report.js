@@ -2,9 +2,7 @@
  * Daily Sync Report — sends an email summarizing inventory changes
  * made by the sync service (Connect to IMB BigCommerce) yesterday.
  *
- * Uses Gmail API via OAuth-like approach with App Password over HTTPS.
- * No SMTP needed (Render free tier blocks outbound SMTP ports).
- *
+ * Uses Resend API (HTTPS) to send email. No SMTP needed.
  * Called from server.js via: require('./daily-report')(app)
  */
 
@@ -14,10 +12,16 @@ const fetch = require('node-fetch');
 const SQ_API        = 'https://connect.squareup.com/v2';
 const SQ_ACCESS     = process.env.SQ_ACCESS_TOKEN;
 const SQ_LOCATION   = process.env.SQ_LOCATION_ID || 'D7QJPMPVZME4K';
-const EMAIL_USER    = process.env.EMAIL_USER || '';
-const EMAIL_PASS    = process.env.EMAIL_PASS || '';
-const REPORT_TO     = process.env.REPORT_TO  || 'dannickels4@yahoo.com';
+const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
+const REPORT_FROM   = process.env.REPORT_FROM || 'onboarding@resend.dev';
+const REPORT_TO     = process.env.REPORT_TO   || 'dannickels4@yahoo.com';
 const SYNC_APP_ID   = 'sq0idp-5SrSlq7mn0lCWZQKk3G_cg';
+
+if (RESEND_API_KEY) {
+  console.log(`[REPORT] Email configured via Resend → ${REPORT_TO}`);
+} else {
+  console.log('[REPORT] Email not configured (set RESEND_API_KEY)');
+}
 
 function sqHeaders() {
   return {
@@ -27,55 +31,27 @@ function sqHeaders() {
   };
 }
 
-// ── Gmail send via HTTPS (no SMTP needed) ──────────────────────────────────
-async function sendEmailViaGmail(to, subject, body) {
-  // Build RFC 2822 email message
-  const toHeader = Array.isArray(to) ? to.join(', ') : to;
-  const rawMessage = [
-    `From: ${EMAIL_USER}`,
-    `To: ${toHeader}`,
-    `Subject: ${subject}`,
-    `Content-Type: text/plain; charset=UTF-8`,
-    '',
-    body
-  ].join('\r\n');
-
-  // Base64url encode
-  const encoded = Buffer.from(rawMessage)
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-
-  // Send via Gmail API using App Password as Basic Auth
-  // Gmail SMTP relay doesn't have a REST API with app passwords,
-  // so we use the googleapis smtp-to-rest bridge approach.
-  // Actually, the simplest approach: use Google's SMTP relay over STARTTLS on port 587
-  // But since Render blocks that, we'll use an alternative: send via fetch to a 
-  // temporary email relay, OR use nodemailer with a different transport.
-
-  // Best approach for Render free tier: use nodemailer with XOAuth2 or 
-  // use a free transactional email service. Let's try Gmail SMTP over SSL on port 465
-  // with a connection timeout setting.
-  
-  // Actually, let's try nodemailer with specific settings that may work
-  const nodemailer = require('nodemailer');
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: { user: EMAIL_USER, pass: EMAIL_PASS },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000
+// ── Send email via Resend HTTPS API ────────────────────────────────────────
+async function sendEmail(to, subject, body) {
+  const recipients = typeof to === 'string' ? to.split(',').map(s => s.trim()) : to;
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${RESEND_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      from: REPORT_FROM,
+      to: recipients,
+      subject: subject,
+      text: body
+    })
   });
-
-  await transporter.sendMail({
-    from: EMAIL_USER,
-    to: toHeader,
-    subject: subject,
-    text: body
-  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Resend API ${res.status}: ${err}`);
+  }
+  return res.json();
 }
 
 // ── Load mapping files for product name lookups ────────────────────────────
@@ -141,7 +117,7 @@ function formatDate(isoStr, off) {
 
 // ── Core report logic ──────────────────────────────────────────────────────
 async function generateAndSendReport() {
-  if (!EMAIL_USER || !EMAIL_PASS) return { sent: false, reason: 'email not configured' };
+  if (!RESEND_API_KEY) return { sent: false, reason: 'email not configured' };
 
   console.log('\n=== Generating Daily Sync Report ===');
   try {
@@ -228,7 +204,7 @@ async function generateAndSendReport() {
       emailBody += `\n\n${syncChanges.length} change(s) across ${products.size} product(s).`;
     }
 
-    await sendEmailViaGmail(REPORT_TO, subject, emailBody);
+    await sendEmail(REPORT_TO, subject, emailBody);
     console.log(`[REPORT] Sent "${subject}" → ${REPORT_TO}`);
     return { sent: true, subject, changes: syncChanges.length };
 
@@ -242,7 +218,7 @@ async function generateAndSendReport() {
 function startScheduler() {
   let lastDate = null;
   setInterval(() => {
-    if (!EMAIL_USER || !EMAIL_PASS) return;
+    if (!RESEND_API_KEY) return;
     const now = new Date();
     const off = ctOffset(now);
     const ctHour = (now.getUTCHours() + 24 - off) % 24;
