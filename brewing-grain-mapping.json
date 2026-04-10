@@ -108,11 +108,7 @@
     "square_bulk_sku": "CMU2",
     "square_location_id": "D7QJPMPVZME4K",
     "bag_variants": [],
-    "bc_per_oz": {
-      "product_id": 4110,
-      "variant_id": 7769,
-      "sku": "CMU2"
-    }
+    "bc_per_oz": null
   },
   "CWHE": {
     "name": "CaraWheat",
@@ -161,11 +157,7 @@
     "square_bulk_sku": "CAR3",
     "square_location_id": "D7QJPMPVZME4K",
     "bag_variants": [],
-    "bc_per_oz": {
-      "product_id": 4109,
-      "variant_id": 7768,
-      "sku": "CAR3"
-    }
+    "bc_per_oz": null
   },
   "CHWH": {
     "name": "Chocolate Wheat Malt",
@@ -200,11 +192,7 @@
     "square_bulk_sku": "CAR2",
     "square_location_id": "D7QJPMPVZME4K",
     "bag_variants": [],
-    "bc_per_oz": {
-      "product_id": 4108,
-      "variant_id": 7767,
-      "sku": "CAR2"
-    }
+    "bc_per_oz": null
   },
   "FLRI": {
     "name": "Flaked Rice",
@@ -703,11 +691,7 @@
         "bag_oz": 880
       }
     ],
-    "bc_per_oz": {
-      "product_id": 4111,
-      "variant_id": 7770,
-      "sku": "CMU3"
-    }
+    "bc_per_oz": null
   },
   "VICT": {
     "name": "Victory Malted Barley",
@@ -1003,11 +987,7 @@
     "square_bulk_sku": "GS440",
     "square_location_id": "D7QJPMPVZME4K",
     "bag_variants": [],
-    "bc_per_oz": {
-      "product_id": 2489,
-      "variant_id": 7917,
-      "sku": "GS440"
-    }
+    "bc_per_oz": null
   },
   "B500": {
     "name": "Roasted Barley 500L",
