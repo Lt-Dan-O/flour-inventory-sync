@@ -1,6 +1,6 @@
 /**
- * Daily Sync Report — sends an email summarizing inventory changes
- * made by the sync service (Connect to IMB BigCommerce) yesterday.
+ * Daily Inventory Report — sends an email summarizing ALL inventory
+ * changes from yesterday, grouped by source (sales, sync, manual, etc.).
  *
  * Uses Resend API (HTTPS) to send email. No SMTP needed.
  * Called from server.js via: require('./daily-report')(app)
@@ -145,17 +145,38 @@ async function generateAndSendReport() {
       cursor = data.cursor || null;
     } while (cursor);
 
-    // 2. Keep only sync-service changes
-    const syncChanges = allChanges.filter(c => {
-      const src = (c.physical_count || c.adjustment)?.source;
-      return src && src.application_id === SYNC_APP_ID;
-    });
-    console.log(`[REPORT] ${allChanges.length} total, ${syncChanges.length} from sync`);
+    console.log(`[REPORT] ${allChanges.length} total inventory changes found`);
 
-    // 3. Look up product names
+    // 2. Group changes by source
+    const SOURCE_LABELS = {
+      [SYNC_APP_ID]: 'IMB Sync Service',
+      'Square Point of Sale': 'Square POS (Sales)',
+      'Square Dashboard':     'Square Dashboard (Manual)',
+    };
+
+    function getSourceKey(change) {
+      const d = change.physical_count || change.adjustment;
+      const src = d?.source;
+      if (!src) return 'Unknown';
+      if (src.application_id === SYNC_APP_ID) return SYNC_APP_ID;
+      return src.product || src.application_id || 'Unknown';
+    }
+
+    function getSourceLabel(key) {
+      return SOURCE_LABELS[key] || key;
+    }
+
+    const grouped = {};
+    for (const c of allChanges) {
+      const key = getSourceKey(c);
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(c);
+    }
+
+    // 3. Look up product names for ALL changes
     const names = buildNameLookup();
     const unknownIds = [...new Set(
-      syncChanges
+      allChanges
         .map(c => (c.physical_count || c.adjustment).catalog_object_id)
         .filter(id => id && !names[id])
     )];
@@ -181,8 +202,8 @@ async function generateAndSendReport() {
       } catch (e) { /* skip */ }
     }
 
-    // 4. Format lines
-    const lines = syncChanges.map(c => {
+    // 4. Format each change line
+    function formatChange(c) {
       const isPhys = c.type === 'PHYSICAL_COUNT';
       const d = isPhys ? c.physical_count : c.adjustment;
       const name = names[d.catalog_object_id] || d.catalog_object_id;
@@ -190,23 +211,36 @@ async function generateAndSendReport() {
       if (d.from_state === 'NONE' && d.to_state === 'IN_STOCK') return `  ${name}: +${d.quantity}`;
       if (d.to_state === 'SOLD' || d.to_state === 'WASTE') return `  ${name}: -${d.quantity}`;
       return `  ${name}: ${d.quantity} (${d.from_state} → ${d.to_state})`;
-    });
+    }
 
     // 5. Build & send email
-    const subject = `IMB Sync Changes - ${dateStr}`;
+    const subject = `IMB Inventory Changes - ${dateStr}`;
     let emailBody;
-    if (syncChanges.length === 0) {
-      emailBody = `No sync changes yesterday (${dateStr}).`;
+    if (allChanges.length === 0) {
+      emailBody = `No inventory changes yesterday (${dateStr}).`;
     } else {
-      const products = new Set(syncChanges.map(c => (c.physical_count || c.adjustment).catalog_object_id));
-      emailBody  = `Inventory changes made by the sync service on ${dateStr}:\n\n`;
-      emailBody += lines.join('\n');
-      emailBody += `\n\n${syncChanges.length} change(s) across ${products.size} product(s).`;
+      const allProducts = new Set(allChanges.map(c => (c.physical_count || c.adjustment).catalog_object_id));
+      emailBody = `Inventory changes on ${dateStr}:\n`;
+      emailBody += `${allChanges.length} change(s) across ${allProducts.size} product(s)\n`;
+
+      // Sort source groups: sync first, then by count descending
+      const sortedKeys = Object.keys(grouped).sort((a, b) => {
+        if (a === SYNC_APP_ID) return -1;
+        if (b === SYNC_APP_ID) return 1;
+        return grouped[b].length - grouped[a].length;
+      });
+
+      for (const key of sortedKeys) {
+        const changes = grouped[key];
+        const label = getSourceLabel(key);
+        emailBody += `\n--- ${label} (${changes.length}) ---\n`;
+        emailBody += changes.map(formatChange).join('\n') + '\n';
+      }
     }
 
     await sendEmail(REPORT_TO, subject, emailBody);
     console.log(`[REPORT] Sent "${subject}" → ${REPORT_TO}`);
-    return { sent: true, subject, changes: syncChanges.length };
+    return { sent: true, subject, changes: allChanges.length };
 
   } catch (e) {
     console.error(`[REPORT] ERROR: ${e.message}`);
@@ -238,3 +272,4 @@ module.exports = function (app) {
   app.post('/daily-report', async (_req, res) => res.json(await generateAndSendReport()));
   startScheduler();
 };
+
