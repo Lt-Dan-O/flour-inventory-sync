@@ -1197,5 +1197,18 @@
     "square_location_id": "D7QJPMPVZME4K",
     "bag_variants": [],
     "bc_per_oz": null
+  },
+  "HAPO": {
+    "name": "Apollo\u2122 Hops (Pellets)",
+    "square_item_id": "36OWRV42KOKRKO3EAWPM2Y2P",
+    "square_bulk_variation_id": "DU6RR2CKGBVWSWNWK2W66TDO",
+    "square_bulk_sku": "HAPO",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [],
+    "bc_per_oz": {
+      "product_id": 3985,
+      "variant_id": 8906,
+      "sku": "HAPO"
+    }
   }
 }
