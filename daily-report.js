@@ -1,11 +1,16 @@
 /**
- * Daily Inventory Report — sends an email summarizing ALL inventory
- * changes from yesterday, grouped by source (sales, sync, manual, etc.).
+ * Daily Sync Report — sends an email summarizing inventory changes
+ * made BY the sync service (webhooks + reconciliation) from yesterday.
+ *
+ * Only includes changes where source.application_id matches our app.
+ * POS sales, manual dashboard edits, etc. are excluded.
  *
  * Uses Resend API (HTTPS) to send email. No SMTP needed.
  * Called from server.js via: require('./daily-report')(app)
  */
 
+const fs = require('fs');
+const path = require('path');
 const fetch = require('node-fetch');
 
 // ── Config from environment ────────────────────────────────────────────────
@@ -16,6 +21,9 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const REPORT_FROM   = process.env.REPORT_FROM || 'onboarding@resend.dev';
 const REPORT_TO     = process.env.REPORT_TO   || 'dannickels4@yahoo.com';
 const SYNC_APP_ID   = 'sq0idp-5SrSlq7mn0lCWZQKk3G_cg';
+
+// File-based dedup — survives in-process restarts on Render
+const LAST_SENT_FILE = path.join(__dirname, '.last-report-date');
 
 if (RESEND_API_KEY) {
   console.log(`[REPORT] Email configured via Resend → ${REPORT_TO}`);
@@ -115,8 +123,22 @@ function formatDate(isoStr, off) {
   return `${months[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
 }
 
+// ── Dedup helpers ──────────────────────────────────────────────────────────
+function alreadySentToday(ctDay) {
+  try {
+    const last = fs.readFileSync(LAST_SENT_FILE, 'utf8').trim();
+    return last === ctDay;
+  } catch (e) { return false; }
+}
+
+function markSentToday(ctDay) {
+  try { fs.writeFileSync(LAST_SENT_FILE, ctDay, 'utf8'); } catch (e) {
+    console.error(`[REPORT] Could not write dedup file: ${e.message}`);
+  }
+}
+
 // ── Core report logic ──────────────────────────────────────────────────────
-async function generateAndSendReport() {
+async function generateAndSendReport(opts = {}) {
   if (!RESEND_API_KEY) return { sent: false, reason: 'email not configured' };
 
   console.log('\n=== Generating Daily Sync Report ===');
@@ -147,36 +169,22 @@ async function generateAndSendReport() {
 
     console.log(`[REPORT] ${allChanges.length} total inventory changes found`);
 
-    // 2. Group changes by source
-    const SOURCE_LABELS = {
-      [SYNC_APP_ID]: 'IMB Sync Service',
-      'Square Point of Sale': 'Square POS (Sales)',
-      'Square Dashboard':     'Square Dashboard (Manual)',
-    };
-
-    function getSourceKey(change) {
+    // 2. Filter to ONLY sync-service changes
+    function isSyncChange(change) {
       const d = change.physical_count || change.adjustment;
       const src = d?.source;
-      if (!src) return 'Unknown';
-      if (src.application_id === SYNC_APP_ID) return SYNC_APP_ID;
-      return src.product || src.application_id || 'Unknown';
+      return src && src.application_id === SYNC_APP_ID;
     }
 
-    function getSourceLabel(key) {
-      return SOURCE_LABELS[key] || key;
-    }
+    const syncChanges = allChanges.filter(isSyncChange);
+    const otherCount  = allChanges.length - syncChanges.length;
 
-    const grouped = {};
-    for (const c of allChanges) {
-      const key = getSourceKey(c);
-      if (!grouped[key]) grouped[key] = [];
-      grouped[key].push(c);
-    }
+    console.log(`[REPORT] ${syncChanges.length} sync-service changes, ${otherCount} other (excluded)`);
 
-    // 3. Look up product names for ALL changes
+    // 3. Look up product names for sync changes only
     const names = buildNameLookup();
     const unknownIds = [...new Set(
-      allChanges
+      syncChanges
         .map(c => (c.physical_count || c.adjustment).catalog_object_id)
         .filter(id => id && !names[id])
     )];
@@ -202,7 +210,11 @@ async function generateAndSendReport() {
       } catch (e) { /* skip */ }
     }
 
-    // 4. Format each change line
+    // 4. Group sync changes by type (physical count vs adjustment)
+    const physCounts = syncChanges.filter(c => c.type === 'PHYSICAL_COUNT');
+    const adjustments = syncChanges.filter(c => c.type === 'ADJUSTMENT');
+
+    // 5. Format each change line
     function formatChange(c) {
       const isPhys = c.type === 'PHYSICAL_COUNT';
       const d = isPhys ? c.physical_count : c.adjustment;
@@ -213,34 +225,34 @@ async function generateAndSendReport() {
       return `  ${name}: ${d.quantity} (${d.from_state} → ${d.to_state})`;
     }
 
-    // 5. Build & send email
-    const subject = `IMB Inventory Changes - ${dateStr}`;
+    // 6. Build & send email
+    const subject = `IMB Sync Report - ${dateStr}`;
     let emailBody;
-    if (allChanges.length === 0) {
-      emailBody = `No inventory changes yesterday (${dateStr}).`;
+
+    if (syncChanges.length === 0) {
+      emailBody = `No sync-service inventory changes yesterday (${dateStr}).\n`;
+      emailBody += `(${otherCount} other change(s) from POS/Dashboard excluded)`;
     } else {
-      const allProducts = new Set(allChanges.map(c => (c.physical_count || c.adjustment).catalog_object_id));
-      emailBody = `Inventory changes on ${dateStr}:\n`;
-      emailBody += `${allChanges.length} change(s) across ${allProducts.size} product(s)\n`;
+      const products = new Set(syncChanges.map(c => (c.physical_count || c.adjustment).catalog_object_id));
+      emailBody = `Sync service activity on ${dateStr}:\n`;
+      emailBody += `${syncChanges.length} change(s) across ${products.size} product(s)\n`;
 
-      // Sort source groups: sync first, then by count descending
-      const sortedKeys = Object.keys(grouped).sort((a, b) => {
-        if (a === SYNC_APP_ID) return -1;
-        if (b === SYNC_APP_ID) return 1;
-        return grouped[b].length - grouped[a].length;
-      });
-
-      for (const key of sortedKeys) {
-        const changes = grouped[key];
-        const label = getSourceLabel(key);
-        emailBody += `\n--- ${label} (${changes.length}) ---\n`;
-        emailBody += changes.map(formatChange).join('\n') + '\n';
+      if (physCounts.length > 0) {
+        emailBody += `\n--- Inventory Sets (${physCounts.length}) ---\n`;
+        emailBody += physCounts.map(formatChange).join('\n') + '\n';
       }
+
+      if (adjustments.length > 0) {
+        emailBody += `\n--- Adjustments (${adjustments.length}) ---\n`;
+        emailBody += adjustments.map(formatChange).join('\n') + '\n';
+      }
+
+      emailBody += `\n(${otherCount} other change(s) from POS/Dashboard excluded)`;
     }
 
     await sendEmail(REPORT_TO, subject, emailBody);
     console.log(`[REPORT] Sent "${subject}" → ${REPORT_TO}`);
-    return { sent: true, subject, changes: allChanges.length };
+    return { sent: true, subject, syncChanges: syncChanges.length, excluded: otherCount };
 
   } catch (e) {
     console.error(`[REPORT] ERROR: ${e.message}`);
@@ -248,28 +260,30 @@ async function generateAndSendReport() {
   }
 }
 
-// ── Scheduler (6 AM CT) ───────────────────────────────────────────────────
+// ── Scheduler (7 AM CT) ───────────────────────────────────────────────────
 function startScheduler() {
-  let lastDate = null;
   setInterval(() => {
     if (!RESEND_API_KEY) return;
     const now = new Date();
     const off = ctOffset(now);
     const ctHour = (now.getUTCHours() + 24 - off) % 24;
     const ctDay  = new Date(now.getTime() - off * 3600000).toISOString().slice(0, 10);
-    if (ctHour === 6 && now.getUTCMinutes() < 5 && lastDate !== ctDay) {
-      lastDate = ctDay;
-      console.log('[REPORT] 6 AM CT — triggering daily report');
+
+    if (ctHour === 7 && now.getUTCMinutes() < 5) {
+      // File-based dedup — prevents double-send on Render restarts
+      if (alreadySentToday(ctDay)) return;
+      markSentToday(ctDay);
+      console.log('[REPORT] 7 AM CT — triggering daily sync report');
       generateAndSendReport().catch(e => console.error(`[REPORT] ${e.message}`));
     }
   }, 60000);
-  console.log('[REPORT] Scheduler active (6 AM CT daily)');
+  console.log('[REPORT] Scheduler active (7 AM CT daily)');
 }
 
 // ── Export ──────────────────────────────────────────────────────────────────
 module.exports = function (app) {
+  // Manual trigger endpoints (for testing / on-demand)
   app.get('/daily-report',  async (_req, res) => res.json(await generateAndSendReport()));
   app.post('/daily-report', async (_req, res) => res.json(await generateAndSendReport()));
   startScheduler();
 };
-
