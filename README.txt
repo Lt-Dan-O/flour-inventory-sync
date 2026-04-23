@@ -1,5 +1,5 @@
-UNIFIED GRAIN-FLOUR-COFFEE-MILL INVENTORY SYNC
-================================================
+UNIFIED GRAIN-FLOUR-COFFEE-MILL-BREWGRAIN-HOPS INVENTORY SYNC
+==============================================================
 
 Square is the ABSOLUTE SOURCE OF TRUTH for all inventory.
 
@@ -15,6 +15,18 @@ MILLS: The unit count in Square = total units available.
 Only the BC "Current Stock" variant is synced (1:1). PreOrder variants
 are handled separately and are NOT part of this sync.
 
+BREWING GRAINS: The bulk oz count in Square = total ounces available.
+Only the BC "Build Your Own Recipe - by the ounce" variant is synced (1:1).
+The 1/5/10/50 lb bag variants are Brewmaster-sourced and NOT part of
+this sync. Square bag-variants (50lb/55lb sacks) trigger a bag-to-bulk
+correction: the bag count is converted to oz and merged into the bulk
+variant, then the bag is reset to 0.
+
+HOPS: The bulk oz count in Square = total ounces available.
+Only the BC "Build Your Own Recipe - by the ounce" variant is synced (1:1).
+The 1 oz / 1 lb / 5 lb bag variants are Brewmaster-sourced and NOT part
+of this sync.
+
   Example (Grain): Warthog has 22 lbs in Square, 0 lbs reserved
     -> Grain: 1 LB=22, 5 LB=4, 10 LB=2, 25 LB=0
     -> Flour: 1 LB=22, 5 LB=4, 10 LB=2
@@ -24,6 +36,12 @@ are handled separately and are NOT part of this sync.
 
   Example (Mill): Harvest Gold Trim has 3 units in Square, 1 reserved
     -> BC Current Stock variant: 2
+
+  Example (Brewing Grain): Carapils has 500 oz in Square, 0 reserved
+    -> BC "by the ounce" variant: 500
+
+  Example (Hops): Citra has 16 oz in Square, 0 reserved
+    -> BC "by the ounce" variant: 16
 
 
 THREE SYNC TRIGGERS
@@ -40,8 +58,9 @@ THREE SYNC TRIGGERS
      Handles grain, coffee, and mill variations.
 
   3. 15-MINUTE RECONCILIATION (automatic + GET/POST /reconcile)
-     Safety net that re-syncs ALL 25 grain + 16 coffee + 9 mill products
-     every 15 min. Also runs 30 seconds after server boot.
+     Safety net that re-syncs ALL homestead grain + coffee + mill + brewing
+     grain + hops products every 15 min. Also runs 30 seconds after server
+     boot. The health endpoint (GET /health) reports the live product counts.
 
 
 SETUP (~20 minutes)
@@ -92,16 +111,18 @@ SETUP (~20 minutes)
 FILES
 -----
 
-  server.js             - Main sync service (3 handlers + reconciliation + auto-discovery)
-  grain-mapping.json    - Mapping: Square IDs + BC grain IDs (flour IDs auto-discovered)
-  coffee-mapping.json   - Mapping: Square IDs + BC per-oz coffee variant IDs
-  mill-mapping.json     - Mapping: Square IDs + BC mill "Current Stock" variant IDs
-  sku-mapping.json      - Legacy flour→grain mapping (kept for reference)
-  register-webhook.js   - Register BC + Square webhooks
-  update-flour-ids.js   - Optional: manually update flour IDs in grain-mapping.json
-  test-local.js         - Local testing (npm start, then node test-local.js)
-  package.json          - Dependencies (express, node-fetch)
-  .env.example          - Environment variable template
+  server.js                     - Main sync service (3 handlers + reconciliation + auto-discovery)
+  grain-mapping.json            - Mapping: Square IDs + BC grain IDs (flour IDs auto-discovered)
+  coffee-mapping.json           - Mapping: Square IDs + BC per-oz coffee variant IDs
+  mill-mapping.json             - Mapping: Square IDs + BC mill "Current Stock" variant IDs
+  brewing-grain-mapping.json    - Mapping: Square IDs + BC brewing grain per-oz variant IDs
+  brewing-hops-mapping.json     - Mapping: Square IDs + BC hops per-oz variant IDs
+  sku-mapping.json              - Legacy flour→grain mapping (kept for reference)
+  register-webhook.js           - Register BC + Square webhooks
+  update-flour-ids.js           - Optional: manually update flour IDs in grain-mapping.json
+  test-local.js                 - Local testing (npm start, then node test-local.js)
+  package.json                  - Dependencies (express, node-fetch)
+  .env.example                  - Environment variable template
 
   NOTE: Flour variant IDs are AUTO-DISCOVERED at startup by querying BC
   category 557 (Freshly Milled Flour). No manual mapping step needed.

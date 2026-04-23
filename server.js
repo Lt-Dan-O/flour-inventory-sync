@@ -47,6 +47,15 @@ try {
   console.warn('brewing-grain-mapping.json not found — run /discover-brewing-grains to generate');
 }
 
+// Brewing hops mapping (structure mirrors coffee-mapping.json: 1:1 per-oz sync)
+let hopsMapping = {};
+try {
+  hopsMapping = require('./brewing-hops-mapping.json');
+  console.log(`Loaded brewing-hops-mapping.json: ${Object.keys(hopsMapping).length} entries`);
+} catch (e) {
+  console.warn('brewing-hops-mapping.json not found — hops will not sync');
+}
+
 const app = express();
 app.use(express.json());
 
@@ -88,6 +97,10 @@ const sqVariationToBrewGrain = {};
 const sqBagVariationToBrewGrain = {};
 // Map BC variant_id → { brewGrainSku, oz: 1, type: 'brewgrain' }
 const bcVariantToBrewGrain = {};
+
+// Hops reverse lookups (same shape as coffee — single per-oz variant per hop)
+const sqVariationToHops = {};
+const bcVariantToHops = {};
 
 // Build static lookups from grain-mapping.json (grain + Square data)
 for (const [grainSku, entry] of Object.entries(grainMapping)) {
@@ -147,6 +160,16 @@ for (const [brewSku, entry] of Object.entries(brewGrainMapping)) {
   // Map BC per-oz variant
   if (entry.bc_per_oz) {
     bcVariantToBrewGrain[entry.bc_per_oz.variant_id] = { brewGrainSku: brewSku, oz: 1, type: 'brewgrain' };
+  }
+}
+
+// Build static lookups from brewing-hops-mapping.json (one-to-one per-oz sync)
+for (const [hopsSku, entry] of Object.entries(hopsMapping)) {
+  if (entry.square_variation_id) {
+    sqVariationToHops[entry.square_variation_id] = hopsSku;
+  }
+  if (entry.bc_per_oz) {
+    bcVariantToHops[entry.bc_per_oz.variant_id] = { hopsSku, oz: 1, type: 'hops' };
   }
 }
 
@@ -814,6 +837,89 @@ async function recalculateMill(millSku, options = {}) {
   }
 }
 
+/** Fetch all pending/unshipped BC orders and sum reserved oz per hops SKU */
+async function getReservedHopsOz() {
+  const reserved = {};  // hopsSku → total oz reserved
+
+  const statuses = [1, 9, 11, 12];
+
+  for (const statusId of statuses) {
+    let page = 1;
+    while (true) {
+      let orders;
+      try {
+        orders = await bcGet(`/v2/orders?status_id=${statusId}&page=${page}&limit=50`);
+      } catch (e) {
+        break;
+      }
+      if (!orders || !Array.isArray(orders) || orders.length === 0) break;
+
+      for (const order of orders) {
+        let products;
+        try {
+          products = await bcGet(`/v2/orders/${order.id}/products`);
+        } catch (e) {
+          continue;
+        }
+
+        for (const item of products) {
+          const vid = item.variant_id;
+          const lookup = bcVariantToHops[vid];
+          if (!lookup) continue;
+
+          // Per-oz variant: each unit = 1 oz
+          const totalOz = lookup.oz * item.quantity;
+          if (!reserved[lookup.hopsSku]) reserved[lookup.hopsSku] = 0;
+          reserved[lookup.hopsSku] += totalOz;
+        }
+      }
+
+      if (orders.length < 50) break;
+      page++;
+    }
+  }
+
+  return reserved;
+}
+
+// ── Core: Recalculate hops BC per-oz variant from Square truth ──────────────
+async function recalculateHops(hopsSku, options = {}) {
+  const entry = hopsMapping[hopsSku];
+  if (!entry) {
+    console.warn(`recalculateHops: unknown hops SKU "${hopsSku}"`);
+    return;
+  }
+
+  // 1. Get total oz from Square (use pre-fetched bulk counts if available)
+  let totalOz;
+  if (options.bulkCounts && options.bulkCounts.has(entry.square_variation_id)) {
+    totalOz = options.bulkCounts.get(entry.square_variation_id);
+  } else {
+    totalOz = await getSquareCount(entry.square_variation_id);
+  }
+
+  // 2. Get reserved oz from pending BC orders
+  const reservedMap = options.reservedHopsOzMap || await getReservedHopsOz();
+  const reservedOz = reservedMap[hopsSku] || 0;
+
+  const availableOz = Math.max(0, totalOz - reservedOz);
+
+  console.log(`  [HOPS: ${entry.name}] Square=${totalOz} oz, reserved=${reservedOz}, available=${availableOz}`);
+
+  // 3. Set BC per-oz variant stock (1:1 sync) — only log success if the PUT actually succeeds.
+  if (entry.bc_per_oz) {
+    try {
+      await setBcVariantStock(entry.bc_per_oz.product_id, entry.bc_per_oz.variant_id, availableOz);
+      console.log(`  [HOPS: ${entry.name}] BC per-oz updated: ${availableOz}`);
+    } catch (e) {
+      console.error(`    ERROR setting hops per-oz (vid ${entry.bc_per_oz.variant_id}): ${e.message}`);
+      console.error(`  [HOPS: ${entry.name}] BC NOT updated (target was ${availableOz})`);
+    }
+  } else {
+    console.log(`  [HOPS: ${entry.name}] no bc_per_oz mapping, skipping BC update`);
+  }
+}
+
 /** Fetch all pending/unshipped BC orders and sum reserved oz per brewing grain SKU */
 async function getReservedBrewOz() {
   const reserved = {};  // brewGrainSku → total oz reserved
@@ -967,6 +1073,7 @@ app.post('/webhooks/order-created', async (req, res) => {
     const affectedCoffees = new Set();
     const affectedMills = new Set();
     const affectedBrewGrains = new Set();
+    const affectedHops = new Set();
 
     for (const item of products) {
       const vid = item.variant_id;
@@ -1040,11 +1147,29 @@ app.post('/webhooks/order-created', async (req, res) => {
         } catch (e) {
           console.error(`  ERROR deducting from Square for ${item.sku}: ${e.message}`);
         }
+        continue;
+      }
+
+      // Check hops (per-oz variant)
+      const hopsLookup = bcVariantToHops[vid];
+      if (hopsLookup) {
+        const ozToDeduct = hopsLookup.oz * item.quantity;
+        const entry = hopsMapping[hopsLookup.hopsSku];
+
+        console.log(`  hops SKU ${item.sku} x${item.quantity} = ${ozToDeduct} oz → deduct from Square`);
+
+        try {
+          await adjustSquareInventory(entry.square_variation_id, -ozToDeduct);
+          console.log(`  → Square deducted ${ozToDeduct} oz from ${entry.name}`);
+          affectedHops.add(hopsLookup.hopsSku);
+        } catch (e) {
+          console.error(`  ERROR deducting from Square for ${item.sku}: ${e.message}`);
+        }
       }
     }
 
-    if (affectedGrains.size === 0 && affectedCoffees.size === 0 && affectedMills.size === 0 && affectedBrewGrains.size === 0) {
-      console.log(`  No grain/flour/coffee/mill/brew-grain items in order, skipping recalculation`);
+    if (affectedGrains.size === 0 && affectedCoffees.size === 0 && affectedMills.size === 0 && affectedBrewGrains.size === 0 && affectedHops.size === 0) {
+      console.log(`  No grain/flour/coffee/mill/brew-grain/hops items in order, skipping recalculation`);
       return;
     }
 
@@ -1081,6 +1206,15 @@ app.post('/webhooks/order-created', async (req, res) => {
       const reservedBrewOzMap = await getReservedBrewOz();
       for (const brewSku of affectedBrewGrains) {
         await recalculateBrewGrain(brewSku, { reservedBrewOzMap });
+      }
+    }
+
+    // Recalculate all affected hops
+    if (affectedHops.size > 0) {
+      console.log(`  Recalculating ${affectedHops.size} hops...`);
+      const reservedHopsOzMap = await getReservedHopsOz();
+      for (const hopsSku of affectedHops) {
+        await recalculateHops(hopsSku, { reservedHopsOzMap });
       }
     }
 
@@ -1144,6 +1278,16 @@ app.post('/webhooks/square-inventory', async (req, res) => {
       return;
     }
 
+    // Check hops mapping
+    const hopsSku = sqVariationToHops[entityId];
+    if (hopsSku) {
+      console.log(`\n=== Square inventory changed for hops: ${hopsMapping[hopsSku].name} ===`);
+      await new Promise(r => setTimeout(r, 2000));
+      await recalculateHops(hopsSku);
+      console.log(`=== Square inventory sync complete ===\n`);
+      return;
+    }
+
     // Check brewing grain bag variant (bag-to-bulk correction)
     const bagInfo = sqBagVariationToBrewGrain[entityId];
     if (bagInfo) {
@@ -1190,19 +1334,22 @@ async function fullReconciliation() {
     const reservedOzMap = await getReservedOz();
     const reservedUnitsMap = await getReservedUnits();
     const reservedBrewOzMap = await getReservedBrewOz();
+    const reservedHopsOzMap = await getReservedHopsOz();
     console.log(`Reserved lbs from pending orders:`, reservedMap);
     console.log(`Reserved oz from pending coffee orders:`, reservedOzMap);
     console.log(`Reserved units from pending mill orders:`, reservedUnitsMap);
     console.log(`Reserved oz from pending brew grain orders:`, reservedBrewOzMap);
+    console.log(`Reserved oz from pending hops orders:`, reservedHopsOzMap);
 
-    // Pre-fetch ALL Square counts (grain + coffee + mill + brew grain) in a single bulk call
+    // Pre-fetch ALL Square counts (grain + coffee + mill + brew grain + hops) in a single bulk call
     const grainVariationIds = Object.values(grainMapping).map(g => g.square_variation_id);
     const coffeeVariationIds = Object.values(coffeeMapping).map(c => c.square_variation_id);
     const millVariationIds = Object.values(millMapping).map(m => m.square_variation_id);
     const brewGrainVariationIds = Object.values(brewGrainMapping).map(b => b.square_bulk_variation_id).filter(Boolean);
     const brewGrainBagVariationIds = Object.values(brewGrainMapping)
       .flatMap(b => (b.bag_variants || []).map(bag => bag.square_variation_id));
-    const allVariationIds = [...grainVariationIds, ...coffeeVariationIds, ...millVariationIds, ...brewGrainVariationIds, ...brewGrainBagVariationIds];
+    const hopsVariationIds = Object.values(hopsMapping).map(h => h.square_variation_id).filter(Boolean);
+    const allVariationIds = [...grainVariationIds, ...coffeeVariationIds, ...millVariationIds, ...brewGrainVariationIds, ...brewGrainBagVariationIds, ...hopsVariationIds];
     const bulkCounts = await bulkFetchSquareCounts(allVariationIds);
 
     let processed = 0;
@@ -1364,6 +1511,37 @@ async function fullReconciliation() {
 
     console.log(`Brewing grain reconciliation complete: ${brewProcessed} OK, ${brewErrors} errors`);
 
+    // ── Hops reconciliation ───────────────────────────────────────────────
+    console.log(`\n--- Hops Reconciliation (${Object.keys(hopsMapping).length} products) ---`);
+    let hopsProcessed = 0;
+    let hopsErrors = 0;
+    const zeroHopsItems = [];
+
+    for (const hopsSku of Object.keys(hopsMapping)) {
+      try {
+        const entry = hopsMapping[hopsSku];
+        if (!entry.bc_per_oz) {
+          console.log(`  [HOPS: ${entry.name}] No BC mapping, skipping`);
+          hopsProcessed++;
+          continue;
+        }
+        const sqCount = bulkCounts.has(entry.square_variation_id)
+          ? bulkCounts.get(entry.square_variation_id)
+          : null;
+        await recalculateHops(hopsSku, { reservedHopsOzMap, bulkCounts });
+        hopsProcessed++;
+        if (sqCount === null || sqCount === 0) {
+          zeroHopsItems.push(hopsSku);
+        }
+      } catch (e) {
+        console.error(`  ERROR reconciling hops ${hopsSku}: ${e.message}`);
+        hopsErrors++;
+      }
+      await new Promise(r => setTimeout(r, 500));
+    }
+
+    console.log(`Hops reconciliation complete: ${hopsProcessed} OK, ${hopsErrors} errors`);
+
     // Combine zero items for deferred retry (grain + coffee + mill)
     const zeroCoffeeForRetry = zeroCoffeeItems.map(sku => ({ sku, type: 'coffee' }));
     const zeroGrainForRetry = zeroItems.map(sku => ({ sku, type: 'grain' }));
@@ -1439,6 +1617,45 @@ async function fullReconciliation() {
           }
         } catch (e) {
           console.error(`  Mill retry error for ${entry.name}: ${e.message}`);
+        }
+        await new Promise(r => setTimeout(r, 3000));
+      }
+    }
+
+    // Deferred retry pass for hops items with 0 counts
+    if (zeroHopsItems.length > 0) {
+      console.log(`\n--- Hops deferred retry: ${zeroHopsItems.length} items with 0 counts ---`);
+      await new Promise(r => setTimeout(r, 30000)); // 30s cooldown
+
+      for (const hopsSku of zeroHopsItems) {
+        const entry = hopsMapping[hopsSku];
+        if (!entry.bc_per_oz) continue;
+        try {
+          const res = await fetch(`${SQ_API}/inventory/batch-retrieve-counts`, {
+            method: 'POST',
+            headers: sqHeaders(),
+            body: JSON.stringify({
+              catalog_object_ids: [entry.square_variation_id],
+              location_ids: [SQ_LOCATION_ID],
+              states: ['IN_STOCK']
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.counts && data.counts.length > 0) {
+              const match = data.counts.find(c => c.catalog_object_id === entry.square_variation_id);
+              if (match) {
+                const qty = Math.floor(parseFloat(match.quantity)) || 0;
+                if (qty > 0) {
+                  console.log(`  Hops retry: ${entry.name} recovered Square=${qty} oz`);
+                  const fixedCounts = new Map([[entry.square_variation_id, qty]]);
+                  await recalculateHops(hopsSku, { reservedHopsOzMap, bulkCounts: fixedCounts });
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error(`  Hops retry error for ${entry.name}: ${e.message}`);
         }
         await new Promise(r => setTimeout(r, 3000));
       }
@@ -1872,6 +2089,7 @@ app.get('/health', (req, res) => {
   const millCount = Object.keys(bcVariantToMill).length;
   const brewGrainCount = Object.keys(bcVariantToBrewGrain).length;
   const brewGrainBagCount = Object.keys(sqBagVariationToBrewGrain).length;
+  const hopsCount = Object.keys(bcVariantToHops).length;
   res.json({
     status: 'ok',
     store: BC_STORE_HASH,
@@ -1880,13 +2098,15 @@ app.get('/health', (req, res) => {
     coffee_products: Object.keys(coffeeMapping).length,
     mill_products: Object.keys(millMapping).length,
     brew_grain_products: Object.keys(brewGrainMapping).length,
+    hops_products: Object.keys(hopsMapping).length,
     bc_grain_variants: grainCount,
     bc_flour_variants: flourCount,
     bc_coffee_variants: coffeeCount,
     bc_mill_variants: millCount,
     bc_brew_grain_variants: brewGrainCount,
+    bc_hops_variants: hopsCount,
     brew_grain_bag_variants: brewGrainBagCount,
-    bc_total_variants: Object.keys(bcVariantToGrain).length + coffeeCount + millCount + brewGrainCount,
+    bc_total_variants: Object.keys(bcVariantToGrain).length + coffeeCount + millCount + brewGrainCount + hopsCount,
     has_bc_token: !!BC_ACCESS_TOKEN,
     has_sq_token: !!SQ_ACCESS_TOKEN,
     reconcile_interval_mins: RECONCILE_MINS,
@@ -1967,6 +2187,7 @@ app.listen(PORT, async () => {
   console.log(`   Coffee mappings: ${Object.keys(coffeeMapping).length}`);
   console.log(`   Mill mappings: ${Object.keys(millMapping).length}`);
   console.log(`   Brewing grain mappings: ${Object.keys(brewGrainMapping).length}`);
+  console.log(`   Hops mappings: ${Object.keys(hopsMapping).length}`);
   console.log(`   Reconciliation interval: ${RECONCILE_MINS} minutes`);
   console.log(`\n   Endpoints:`);
   console.log(`     POST /webhooks/order-created      (BC order webhook)`);
@@ -1982,6 +2203,7 @@ app.listen(PORT, async () => {
   console.log(`   BC mill variant lookups: ${Object.keys(bcVariantToMill).length}`);
   console.log(`   BC brewing grain variant lookups: ${Object.keys(bcVariantToBrewGrain).length}`);
   console.log(`   Brewing grain bag variants (for bag-to-bulk): ${Object.keys(sqBagVariationToBrewGrain).length}`);
+  console.log(`   BC hops variant lookups: ${Object.keys(bcVariantToHops).length}`);
 
   // Schedule recurring reconciliation
   if (RECONCILE_MINS > 0) {

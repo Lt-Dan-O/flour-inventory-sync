@@ -1,0 +1,512 @@
+{
+  "498218X": {
+    "name": "Cashmere Hops (Pellets)",
+    "square_variation_id": "OUQPBELKUZKLOXHNL5T53V2S",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3437,
+      "variant_id": 8024,
+      "sku": "498218X"
+    }
+  },
+  "843200111608": {
+    "name": "Liberty Hops (Pellets)",
+    "square_variation_id": "F7VBSFOMJHMBD73XMDJ4TKMX",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3428,
+      "variant_id": 8052,
+      "sku": "843200111608"
+    }
+  },
+  "HADM": {
+    "name": "Admiral",
+    "square_variation_id": "S7M5M5QCJSB6644FD2H6KNU5",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 4133,
+      "variant_id": 8093,
+      "sku": "HADM"
+    }
+  },
+  "HAMA": {
+    "name": "Amarillo\u00ae Hops (Pellets)",
+    "square_variation_id": "QBVVQUHZRJSU7OV7ONELBUEX",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3912,
+      "variant_id": 7796,
+      "sku": "HAMA"
+    }
+  },
+  "HAPO": {
+    "name": "Apollo\u2122 Hops (Pellets)",
+    "square_variation_id": "DU6RR2CKGBVWSWNWK2W66TDO",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3985,
+      "variant_id": 8906,
+      "sku": "HAPO"
+    }
+  },
+  "HAZA": {
+    "name": "Azacca\u00ae Hops (Pellets)",
+    "square_variation_id": "XKIK2NDUFGPPXPYISJYL6KA2",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3976,
+      "variant_id": 6811,
+      "sku": "HAZA"
+    }
+  },
+  "HBLH": {
+    "name": "Hallertau Blanc Hops (Pellets)",
+    "square_variation_id": "6BFG6JQL75CGGXZCTXFKN6W5",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3427,
+      "variant_id": 8047,
+      "sku": "HBLH"
+    }
+  },
+  "HBRA": {
+    "name": "Bravo\u2122 Hops (Pellets)",
+    "square_variation_id": "OMZ7EBLL63RZME5UXRMIPLIY",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3449,
+      "variant_id": 8022,
+      "sku": "HBRA"
+    }
+  },
+  "HCAS": {
+    "name": "Cascade Hops (Pellets)",
+    "square_variation_id": "ILG6KIDB77E4MPSE2J25WMCN",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3396,
+      "variant_id": 8023,
+      "sku": "HCAS"
+    }
+  },
+  "HCEN": {
+    "name": "Centennial Hops (Pellets)",
+    "square_variation_id": "GZ4OJJFWTZLHGAC45RQJ4M3P",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3399,
+      "variant_id": 8025,
+      "sku": "HCEN"
+    }
+  },
+  "HCHA": {
+    "name": "Challenger (UK) Hop Pellets",
+    "square_variation_id": "LY6IEZOCWSIDAEP74Z4HL52Z",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 4132,
+      "variant_id": 8090,
+      "sku": "HCHA"
+    }
+  },
+  "HCHI": {
+    "name": "Chinook Hops (Pellets)",
+    "square_variation_id": "ASSEMG5N52SICJCB5XUQTLZ4",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3409,
+      "variant_id": 8026,
+      "sku": "HCHI"
+    }
+  },
+  "HCIT": {
+    "name": "Citra\u00ae Brand HBC 394 Hops (Pellets)",
+    "square_variation_id": "SYHMCTCBR4V7ZW75ZJAYHLU3",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3395,
+      "variant_id": 8027,
+      "sku": "HCIT"
+    }
+  },
+  "HCLU": {
+    "name": "Cluster Hops (Pellets)",
+    "square_variation_id": "WZ2S2AAKHFG5GRLSHEIJQF7A",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3430,
+      "variant_id": 8032,
+      "sku": "HCLU"
+    }
+  },
+  "HCOL": {
+    "name": "Columbus CTZ Hops (Pellets)",
+    "square_variation_id": "6KGTOSPHPLFIWCFIYDD5OEPA",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3405,
+      "variant_id": 7778,
+      "sku": "HCOL"
+    }
+  },
+  "HCOM": {
+    "name": "Comet Hops (Pellets)",
+    "square_variation_id": "LHHPTBD2HDTB637Y4XTZU727",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3468,
+      "variant_id": 8033,
+      "sku": "HCOM"
+    }
+  },
+  "HCRY": {
+    "name": "Crystal Hops (Pellets)",
+    "square_variation_id": "2PL3BK6H6DW7UPAXSILX2GG5",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3423,
+      "variant_id": 8034,
+      "sku": "HCRY"
+    }
+  },
+  "HDRA": {
+    "name": "Dr. Rudi Hops (Pellets)",
+    "square_variation_id": "UYBISEBKLHHUNKQ4HS6LT2DF",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3483,
+      "variant_id": 7480,
+      "sku": "HDRA"
+    }
+  },
+  "HEKG": {
+    "name": "UK East Kent Golding Hop Pellets",
+    "square_variation_id": "WWDDIEWUAATMWF2F3VE7ONRR",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 4131,
+      "variant_id": 8091,
+      "sku": "HEKG"
+    }
+  },
+  "HEKU": {
+    "name": "Ekuanot\u00ae Brand HBC 366 (Equinox) Hops (Pellets)",
+    "square_variation_id": "TFSXAJTQBK5XXZQAK3EHOD2R",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3446,
+      "variant_id": 8038,
+      "sku": "HEKU"
+    }
+  },
+  "HELD": {
+    "name": "El Dorado Hops (Pellets)",
+    "square_variation_id": "YZ5UDHMH6TTT2V2WVV6AW2SZ",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3411,
+      "variant_id": 8042,
+      "sku": "HELD"
+    }
+  },
+  "HFAF": {
+    "name": "Falconers Flight Hops (Pellets)",
+    "square_variation_id": "XS3U4NWCFA5VG4OFPGY4Q57T",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3447,
+      "variant_id": 8044,
+      "sku": "HFAF"
+    }
+  },
+  "HFUG": {
+    "name": "British Fuggle Hops (Pellets)",
+    "square_variation_id": "XTPLHQV45FEPBMG3WAUMKIS2",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3410,
+      "variant_id": 8079,
+      "sku": "HFUG"
+    }
+  },
+  "HGAE": {
+    "name": "Galena Hops (Pellets)",
+    "square_variation_id": "R5UDC37RDTH6ES5AMJRYYJTG",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3441,
+      "variant_id": 8046,
+      "sku": "HGAE"
+    }
+  },
+  "HGAL": {
+    "name": "Galaxy Hops (Pellets)",
+    "square_variation_id": "LJCLJ7CFA43CCELJK27AEHCQ",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3408,
+      "variant_id": 8045,
+      "sku": "HGAL"
+    }
+  },
+  "HHAM": {
+    "name": "Hallertau Mittelfruh Hops (Pellets)",
+    "square_variation_id": "PRBKHGR7ZUBUCO34T77WNBW4",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3398,
+      "variant_id": 8048,
+      "sku": "HHAM"
+    }
+  },
+  "HHEL": {
+    "name": "Helga",
+    "square_variation_id": "MIUWESKF4ZRU64Q2J7J5BQHK",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 4134,
+      "variant_id": 8095,
+      "sku": "HHEL"
+    }
+  },
+  "HHER": {
+    "name": "Hersbrucker Hops (Pellets)",
+    "square_variation_id": "VOG63S5T2CEZIO5HBGNEUNCA",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3416,
+      "variant_id": 8049,
+      "sku": "HHER"
+    }
+  },
+  "HHOR": {
+    "name": "Horizon",
+    "square_variation_id": "QDJY37RQSHUMM4UWAXODGCFP",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 4137,
+      "variant_id": 8101,
+      "sku": "HHOR"
+    }
+  },
+  "HID7": {
+    "name": "Idaho #7 Hops (Pellets)",
+    "square_variation_id": "EG5MWS3GVWWZVVCTQE2JDMQ6",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3429,
+      "variant_id": 8050,
+      "sku": "HID7"
+    }
+  },
+  "HLED": {
+    "name": "Lemondrop\u2122 Hops (Pellets)",
+    "square_variation_id": "3EEOEBSYBHL6TYNQWLGCKUU6",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3418,
+      "variant_id": 8051,
+      "sku": "HLED"
+    }
+  },
+  "HMAG": {
+    "name": "German Magnum Hops (Pellets)",
+    "square_variation_id": "CQ4QUT533MKZU7ZZ4CPLTLTS",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3424,
+      "variant_id": 8053,
+      "sku": "HMAG"
+    }
+  },
+  "HMOS": {
+    "name": "Mosaic\u00ae Brand HBC 369 Hops (Pellets)",
+    "square_variation_id": "GWZXUQ2WDACI66S32BAHPZ26",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3973,
+      "variant_id": 6801,
+      "sku": "HMOS"
+    }
+  },
+  "HMOT": {
+    "name": "New Zealand Motueka Hops (Pellets)",
+    "square_variation_id": "Q4XDAQPUIAVIISJKMHJXR6EP",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3426,
+      "variant_id": 8081,
+      "sku": "HMOT"
+    }
+  },
+  "HMTH": {
+    "name": "Mt. Hood Hops (Pellets)",
+    "square_variation_id": "F6IVROECWJGQBN5VBKS3KQEP",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3431,
+      "variant_id": 8054,
+      "sku": "HMTH"
+    }
+  },
+  "HNES": {
+    "name": "Nelson Sauvin Hops (Pellets)",
+    "square_variation_id": "QAVZAOZ55CH52Y4M7CQXW6FV",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3420,
+      "variant_id": 8057,
+      "sku": "HNES"
+    }
+  },
+  "HNOB": {
+    "name": "Northern Brewer Hops (Pellets)",
+    "square_variation_id": "XOMXMPQFN6PSF3YC3CXBNE2Z",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3415,
+      "variant_id": 8058,
+      "sku": "HNOB"
+    }
+  },
+  "HNUG": {
+    "name": "Nugget Hops (Pellets)",
+    "square_variation_id": "KK4BVYHLDGB7CTWAPJIVYXWW",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3417,
+      "variant_id": 8059,
+      "sku": "HNUG"
+    }
+  },
+  "HPER": {
+    "name": "German Perle Hops (Pellets)",
+    "square_variation_id": "MKL3BQ723GP4PCIUXHJYBJQL",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3413,
+      "variant_id": 8082,
+      "sku": "HPER"
+    }
+  },
+  "HSIM": {
+    "name": "Simcoe\u00ae Brand YCR 14 Hops (Pellets)",
+    "square_variation_id": "TUVAUQTIN7TOVT5PRCBRSQYB",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3403,
+      "variant_id": 8060,
+      "sku": "HSIM"
+    }
+  },
+  "HSOA": {
+    "name": "Sorachi Ace",
+    "square_variation_id": "4VGJEP6NOKGMCBKDCZEOVKZ5",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 4135,
+      "variant_id": 8097,
+      "sku": "HSOA"
+    }
+  },
+  "HSPA": {
+    "name": "German Spalt Hops (Pellets)",
+    "square_variation_id": "QKARTDHHUMEOGKMQHI6UKFUK",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3451,
+      "variant_id": 8083,
+      "sku": "HSPA"
+    }
+  },
+  "HSTE": {
+    "name": "Sterling Hops (Pellets)",
+    "square_variation_id": "KNBKYF2KRPXTLCLVY5UC24FB",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 4130,
+      "variant_id": 8087,
+      "sku": "HSTE"
+    }
+  },
+  "HSTG": {
+    "name": "Styrian Goldings (Celeia) Hops (Pellets)",
+    "square_variation_id": "KMYCC4WLX6WUSYQVPZG5OHFO",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3414,
+      "variant_id": 8077,
+      "sku": "HSTG"
+    }
+  },
+  "HTAR": {
+    "name": "Target",
+    "square_variation_id": "HXYVLCCX2WT7TO7OJDKJK364",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 4136,
+      "variant_id": 8099,
+      "sku": "HTAR"
+    }
+  },
+  "HTET": {
+    "name": "Tettnanger Hops (Pellets)",
+    "square_variation_id": "STNNDSAHJTB5CMYT5TNE3AYX",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3404,
+      "variant_id": 8066,
+      "sku": "HTET"
+    }
+  },
+  "HVIS": {
+    "name": "Vic Secret Hops (Pellets)",
+    "square_variation_id": "7JGHUZ3J7GHO54BG5MNYVD3V",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3448,
+      "variant_id": 8070,
+      "sku": "HVIS"
+    }
+  },
+  "HWAR": {
+    "name": "Warrior\u00ae Brand YCR 5 Hops (Pellets)",
+    "square_variation_id": "MPYLJT3QBLCKVHFSPTWIMN6O",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3412,
+      "variant_id": 8071,
+      "sku": "HWAR"
+    }
+  },
+  "HWIL": {
+    "name": "Willamette Hops (Pellets)",
+    "square_variation_id": "HCNLOQ5DTZUTZGETHLH5J3J5",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3407,
+      "variant_id": 8072,
+      "sku": "HWIL"
+    }
+  },
+  "HZAM": {
+    "name": "Zamba\u2122 Hops (Pellets)",
+    "square_variation_id": "2337OYVVDZOZFMAEWIKOTVPV",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3453,
+      "variant_id": 8073,
+      "sku": "HZAM"
+    }
+  },
+  "K018574": {
+    "name": "Nectaron\u00ae Hops (Pellets)",
+    "square_variation_id": "JIKTRYDQMWFSPZ4ZRQLS2K5Z",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_per_oz": {
+      "product_id": 3464,
+      "variant_id": 8056,
+      "sku": "K018574"
+    }
+  }
+}
