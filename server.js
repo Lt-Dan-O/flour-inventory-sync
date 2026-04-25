@@ -34,6 +34,8 @@
 
 const express = require('express');
 const fetch = require('node-fetch');
+const fs = require('fs');
+const path = require('path');
 const grainMapping = require('./grain-mapping.json');
 const coffeeMapping = require('./coffee-mapping.json');
 const millMapping = require('./mill-mapping.json');
@@ -335,11 +337,69 @@ async function getReservedLbs() {
   return reserved;
 }
 
+// ── BC-write audit log ─────────────────────────────────────────────────────
+// Each successful BC inventory write is appended to this file as one JSON line.
+// The daily report reads it to show "Square → BC" sync activity for yesterday.
+// Filesystem may be ephemeral on Render's free tier — that's acceptable here
+// because the 15-min reconciliation keeps the service active continuously.
+const SYNC_BC_LOG_FILE = path.join(__dirname, '.sync-bc-writes.log');
+
+function describeVariant(variantId) {
+  if (bcVariantToGrain[variantId]) {
+    const e = bcVariantToGrain[variantId];
+    const entry = grainMapping[e.grainSku];
+    return { kind: e.type || 'grain', sku: e.grainSku,
+             name: entry?.name || e.grainSku, size: `${e.lbs} LB` };
+  }
+  if (bcVariantToCoffee[variantId]) {
+    const e = bcVariantToCoffee[variantId];
+    const entry = coffeeMapping[e.coffeeSku];
+    return { kind: 'coffee', sku: e.coffeeSku,
+             name: entry?.name || e.coffeeSku, size: 'per oz' };
+  }
+  if (bcVariantToMill[variantId]) {
+    const e = bcVariantToMill[variantId];
+    const entry = millMapping[e.millSku];
+    return { kind: 'mill', sku: e.millSku,
+             name: entry?.name || e.millSku, size: 'unit' };
+  }
+  if (bcVariantToBrewGrain[variantId]) {
+    const e = bcVariantToBrewGrain[variantId];
+    const entry = brewGrainMapping[e.brewGrainSku];
+    return { kind: 'brewgrain', sku: e.brewGrainSku,
+             name: entry?.name || e.brewGrainSku, size: 'per oz' };
+  }
+  if (bcVariantToHops[variantId]) {
+    const e = bcVariantToHops[variantId];
+    const entry = hopsMapping[e.hopsSku];
+    return { kind: 'hops', sku: e.hopsSku,
+             name: entry?.name || e.hopsSku, size: 'per oz' };
+  }
+  return { kind: 'unknown', sku: '', name: `variant_${variantId}`, size: '' };
+}
+
+function logBcWrite(productId, variantId, level) {
+  try {
+    const desc = describeVariant(variantId);
+    const line = JSON.stringify({
+      ts: new Date().toISOString(),
+      kind: desc.kind, sku: desc.sku, name: desc.name, size: desc.size,
+      product_id: productId, variant_id: variantId, level: Math.max(0, level)
+    }) + '\n';
+    fs.appendFileSync(SYNC_BC_LOG_FILE, line);
+  } catch (e) {
+    console.error(`[LOG] BC-write log failed: ${e.message}`);
+  }
+}
+
 /** Update a single BC variant's inventory_level */
 async function setBcVariantStock(productId, variantId, level) {
   await bcPut(`/v3/catalog/products/${productId}/variants/${variantId}`, {
     inventory_level: Math.max(0, level)
   });
+  // Append to the audit log AFTER the PUT succeeds (so failed writes don't
+  // pollute the log).
+  logBcWrite(productId, variantId, level);
 }
 
 // ── Helpers: Square ─────────────────────────────────────────────────────────
