@@ -191,33 +191,70 @@ function readBcWritesInRange(afterIso, beforeIso) {
   return out;
 }
 
-// Group BC writes by product, keep only the latest level per (product, variant).
+// Group BC writes by product, comparing FIRST vs LAST level per variant.
+// Only variants where the level actually changed are included. Variants whose
+// 96-per-day reconciliation writes all hit the same value are silently
+// excluded (they're noise — they confirm nothing changed).
+//
+// Returns a list of products with at least one changed variant. Each product
+// includes:
+//   { kind, sku, name, variants: [{ size, first, last, delta }], totalWrites,
+//     silentWrites }   // silentWrites = writes for variants that didn't change
 function summarizeBcWrites(entries) {
-  // key: `${product_id}::${variant_id}` -> latest entry
-  const latest = new Map();
+  // Per-variant aggregate: first, last, all writes
+  const byVariant = new Map();   // key = `${product_id}::${variant_id}`
   for (const e of entries) {
     const k = `${e.product_id}::${e.variant_id}`;
-    const cur = latest.get(k);
-    if (!cur || e.ts > cur.ts) latest.set(k, e);
-  }
-
-  // Group by product (kind + sku + name)
-  const byProduct = new Map();   // key = `${kind}::${sku}::${name}` -> {variants:[], writeCount}
-  const writeCount = new Map();
-  for (const e of entries) {
-    const pk = `${e.kind}::${e.sku}::${e.name}`;
-    writeCount.set(pk, (writeCount.get(pk) || 0) + 1);
-  }
-  for (const e of latest.values()) {
-    const pk = `${e.kind}::${e.sku}::${e.name}`;
-    if (!byProduct.has(pk)) {
-      byProduct.set(pk, { kind: e.kind, sku: e.sku, name: e.name, variants: [],
-                         totalWrites: writeCount.get(pk) || 0 });
+    let cur = byVariant.get(k);
+    if (!cur) {
+      cur = {
+        kind: e.kind, sku: e.sku, name: e.name, size: e.size,
+        product_id: e.product_id, variant_id: e.variant_id,
+        firstTs: e.ts, firstLevel: e.level,
+        lastTs:  e.ts, lastLevel:  e.level,
+        writes: 1,
+      };
+      byVariant.set(k, cur);
+    } else {
+      cur.writes += 1;
+      if (e.ts < cur.firstTs) { cur.firstTs = e.ts; cur.firstLevel = e.level; }
+      if (e.ts > cur.lastTs)  { cur.lastTs  = e.ts; cur.lastLevel  = e.level; }
     }
-    byProduct.get(pk).variants.push({ size: e.size, level: e.level });
   }
 
-  // Sort each product's variants in a sensible order (1 LB / 5 LB / 10 LB / 25 LB / per oz / unit / flour)
+  // Group by product (kind + sku + name) so we can show variants together
+  const byProduct = new Map();
+  for (const v of byVariant.values()) {
+    const pk = `${v.kind}::${v.sku}::${v.name}`;
+    if (!byProduct.has(pk)) {
+      byProduct.set(pk, {
+        kind: v.kind, sku: v.sku, name: v.name,
+        variants: [],          // changed variants only
+        totalWrites: 0,        // total writes (changed + silent)
+        silentWrites: 0,       // writes against variants that didn't change
+        changedWrites: 0,      // writes against variants that did change
+      });
+    }
+    const bucket = byProduct.get(pk);
+    bucket.totalWrites += v.writes;
+    const changed = v.firstLevel !== v.lastLevel;
+    if (changed) {
+      bucket.changedWrites += v.writes;
+      bucket.variants.push({
+        size: v.size,
+        first: v.firstLevel, last: v.lastLevel,
+        delta: v.lastLevel - v.firstLevel,
+        writes: v.writes,
+      });
+    } else {
+      bucket.silentWrites += v.writes;
+    }
+  }
+
+  // Drop products with no changed variants
+  const withChanges = [...byProduct.values()].filter(p => p.variants.length > 0);
+
+  // Sort each product's variants by size
   function sizeRank(s) {
     const m = (s || '').match(/(\d+)\s*LB/i);
     if (m) return parseInt(m[1], 10);
@@ -225,14 +262,34 @@ function summarizeBcWrites(entries) {
     if (/unit/i.test(s)) return 0;
     return 999;
   }
-  for (const p of byProduct.values()) {
+  for (const p of withChanges) {
     p.variants.sort((a, b) => sizeRank(a.size) - sizeRank(b.size));
   }
 
-  // Sort products by name within kind
-  const sorted = [...byProduct.values()].sort((a, b) =>
+  // Sort products by kind then name
+  withChanges.sort((a, b) =>
     a.kind.localeCompare(b.kind) || a.name.localeCompare(b.name));
-  return sorted;
+
+  // Compute totals across ALL products (including ones with no change), so
+  // the email can report the silent-write count
+  let allTotalWrites = 0, allSilentWrites = 0, allChangedWrites = 0;
+  let totalProducts = byProduct.size;
+  let totalVariants = byVariant.size;
+  for (const p of byProduct.values()) {
+    allTotalWrites   += p.totalWrites;
+    allSilentWrites  += p.silentWrites;
+    allChangedWrites += p.changedWrites;
+  }
+
+  return {
+    changedProducts: withChanges,
+    totals: {
+      products: totalProducts, variants: totalVariants,
+      totalWrites: allTotalWrites,
+      changedWrites: allChangedWrites,
+      silentWrites: allSilentWrites,
+    },
+  };
 }
 
 // ── Core report logic ──────────────────────────────────────────────────────
@@ -338,30 +395,40 @@ async function generateAndSendReport(opts = {}) {
     // 6. Read BC-write audit log for the same date range (Square → BC sync direction)
     const bcWrites = readBcWritesInRange(after, before);
     const bcSummary = summarizeBcWrites(bcWrites);
-    console.log(`[REPORT] ${bcWrites.length} BC inventory writes logged across ${bcSummary.length} product(s)`);
+    console.log(`[REPORT] ${bcSummary.totals.totalWrites} BC writes — ` +
+                `${bcSummary.changedProducts.length} product(s) actually changed, ` +
+                `${bcSummary.totals.silentWrites} silent reconciliation write(s) excluded`);
 
     // 7. Build & send email
     const subject = `IMB Sync Report - ${dateStr}`;
     const lines = [];
     lines.push(`Sync activity on ${dateStr}:`);
 
-    // Section A — Square → BC writes (from POS sales etc. that the sync pushed
-    // into BigCommerce). Comes from our internal audit log.
+    // Section A — Square → BC writes that ACTUALLY CHANGED inventory.
+    // The sync's 15-minute reconciliation writes to BC every cycle whether or
+    // not anything changed; those writes are noise and excluded here.
     lines.push('');
     lines.push('=== Square → BC writes ===');
-    lines.push('(POS sales, manual Square edits, and reconciliation passes that the');
-    lines.push(' sync service translated into BigCommerce inventory updates)');
-    if (bcSummary.length === 0) {
-      lines.push('  (no BC inventory updates logged)');
+    lines.push('(Inventory levels that changed yesterday — POS sales, manual');
+    lines.push(' Square edits, and Brewmaster updates that moved a count)');
+    if (bcSummary.changedProducts.length === 0) {
+      lines.push('  (no BC inventory levels changed)');
     } else {
-      lines.push(`  ${bcSummary.length} product(s), ${bcWrites.length} BC variant write(s)`);
-      for (const p of bcSummary) {
+      const totalDeltas = bcSummary.changedProducts.reduce(
+        (s, p) => s + p.variants.length, 0);
+      lines.push(`  ${bcSummary.changedProducts.length} product(s), ${totalDeltas} variant change(s)`);
+      for (const p of bcSummary.changedProducts) {
         lines.push('');
-        lines.push(`  ${p.name}  [${p.kind}, ${p.totalWrites} write${p.totalWrites===1?'':'s'}]`);
+        lines.push(`  ${p.name}  [${p.kind}]`);
         for (const v of p.variants) {
-          lines.push(`     ${v.size.padEnd(8)} → ${v.level}`);
+          const sign = v.delta > 0 ? '+' : '';
+          lines.push(`     ${(v.size || '').padEnd(8)} ${String(v.first).padStart(5)} → ${String(v.last).padEnd(5)}  (${sign}${v.delta})`);
         }
       }
+    }
+    if (bcSummary.totals.silentWrites > 0) {
+      lines.push('');
+      lines.push(`  (${bcSummary.totals.silentWrites} silent reconciliation write(s) excluded — confirmed no change)`);
     }
 
     // Section B — BC → Square deductions (the sync's response to BC orders).
@@ -395,7 +462,9 @@ async function generateAndSendReport(opts = {}) {
     console.log(`[REPORT] Sent "${subject}" → ${REPORT_TO}`);
     return { sent: true, subject,
              syncChanges: syncChanges.length,
-             bcWrites: bcWrites.length, bcProducts: bcSummary.length,
+             bcChangedProducts: bcSummary.changedProducts.length,
+             bcChangedWrites: bcSummary.totals.changedWrites,
+             bcSilentWrites: bcSummary.totals.silentWrites,
              excluded: otherCount, etDay };
 
   } catch (e) {
