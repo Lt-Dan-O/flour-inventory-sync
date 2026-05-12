@@ -68,7 +68,7 @@
     "square_variation_id": "HK4265OJDJHQURJKVBMVJNVD",
     "square_location_id": "D7QJPMPVZME4K",
     "bc_product_id": 4034,
-    "bc_variant_id": 7071,
+    "bc_variant_id": 9153,
     "sku": "636702760203"
   },
   "636702790705": {
@@ -79,5 +79,41 @@
     "bc_product_id": 4033,
     "bc_variant_id": 7068,
     "sku": "636702790705"
+  },
+  "FIL20": {
+    "name": "Buon Vino Mini Jet Filter",
+    "square_item_id": "2357KCXQZS6BVGG27CGGOM2N",
+    "square_variation_id": "CYMPPGWD4IYG24AZKJOUGX3C",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_product_id": 4549,
+    "bc_variant_id": 9211,
+    "sku": "FIL20"
+  },
+  "FIL22": {
+    "name": "Buon Vino Mini Jet Filter Pads (3 Pack) - Coarse",
+    "square_item_id": "ITJJTULRWBA3CYEOTF2V7T5X",
+    "square_variation_id": "LMCHFSSUVJLQEW77KL6M3GQV",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_product_id": 465,
+    "bc_variant_id": 487,
+    "sku": "FIL22"
+  },
+  "FIL23": {
+    "name": "Buon Vino Mini Jet Filter Pads (3 Pack) - Fine / Polishing",
+    "square_item_id": "SQ6YQO2DIQY4B2RR4QD4P4FC",
+    "square_variation_id": "LVT4E5KZGNVNW6DXGGREUUZ6",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_product_id": 464,
+    "bc_variant_id": 486,
+    "sku": "FIL23"
+  },
+  "FIL24": {
+    "name": "Buon Vino Mini Jet Filter Pads (3 Pack) - Sterile",
+    "square_item_id": "D7L4HKN6CXF4LJKK5VMVQCQ2",
+    "square_variation_id": "Z7TCC5QFCOW2QDW3J3PAJWYN",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_product_id": 469,
+    "bc_variant_id": 491,
+    "sku": "FIL24"
   }
 }
