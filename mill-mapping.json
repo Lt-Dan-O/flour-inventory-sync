@@ -115,5 +115,32 @@
     "bc_product_id": 469,
     "bc_variant_id": 491,
     "sku": "FIL24"
+  },
+  "FIL12": {
+    "name": "Buon Vino Super Jet Filter Pads (3 Pack) - Coarse",
+    "square_item_id": "4TOPWH7E62JNBL5NTGF5E6UW",
+    "square_variation_id": "7IVVYO7PH2YVNUKBQTA7XYPK",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_product_id": 4550,
+    "bc_variant_id": 9212,
+    "sku": "FIL12"
+  },
+  "FIL16": {
+    "name": "Buon Vino Super Jet Filter Pads (3 Pack) - Fine / Polish",
+    "square_item_id": "UACJ4QN4JBZ6P4UC74TWBNJL",
+    "square_variation_id": "RLL7HNP656SVJZOK7UPO5HBW",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_product_id": 4551,
+    "bc_variant_id": 9213,
+    "sku": "FIL16"
+  },
+  "FIL18": {
+    "name": "Buon Vino Super Jet Filter Pads (3 Pack) - Sterile 0.5 Micron",
+    "square_item_id": "UUL4JGXS4PL5SAJ6R4XKACK4",
+    "square_variation_id": "NVK6OS3HPADGBAFEBN6XDU6T",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_product_id": 4552,
+    "bc_variant_id": 9214,
+    "sku": "FIL18"
   }
 }
