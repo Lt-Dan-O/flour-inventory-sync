@@ -340,9 +340,28 @@ async function getReservedLbs() {
 // ── BC-write audit log ─────────────────────────────────────────────────────
 // Each successful BC inventory write is appended to this file as one JSON line.
 // The daily report reads it to show "Square → BC" sync activity for yesterday.
-// Filesystem may be ephemeral on Render's free tier — that's acceptable here
-// because the 15-min reconciliation keeps the service active continuously.
-const SYNC_BC_LOG_FILE = path.join(__dirname, '.sync-bc-writes.log');
+//
+// Path selection: if a Render Persistent Disk is mounted at /var/data we use
+// it (log survives deploys and restarts permanently). Otherwise we fall back
+// to __dirname which is ephemeral on Render free/Starter tiers (log may be
+// wiped on every restart). The boot snapshot below mitigates that fallback
+// case by writing a baseline on each startup.
+function pickPersistentDir() {
+  try {
+    if (fs.existsSync('/var/data') && fs.statSync('/var/data').isDirectory()) {
+      // Sanity check we can actually write to it
+      const probe = path.join('/var/data', '.write-probe');
+      fs.writeFileSync(probe, '');
+      fs.unlinkSync(probe);
+      return '/var/data';
+    }
+  } catch (e) { /* fall through */ }
+  return __dirname;
+}
+const LOG_DIR = pickPersistentDir();
+const SYNC_BC_LOG_FILE = path.join(LOG_DIR, '.sync-bc-writes.log');
+console.log(`[LOG] Audit log path: ${SYNC_BC_LOG_FILE} ` +
+            `${LOG_DIR === '/var/data' ? '(persistent disk)' : '(ephemeral — survives only until next restart)'}`);
 
 function describeVariant(variantId) {
   if (bcVariantToGrain[variantId]) {
@@ -400,6 +419,136 @@ async function setBcVariantStock(productId, variantId, level) {
   // Append to the audit log AFTER the PUT succeeds (so failed writes don't
   // pollute the log).
   logBcWrite(productId, variantId, level);
+}
+
+// ── Boot snapshot ──────────────────────────────────────────────────────────
+// Render's free/Starter tier has an ephemeral filesystem: the audit log gets
+// wiped on every deploy or restart. Without a snapshot at boot, the daily
+// report sees only post-restart writes (all the same value) and reports
+// "0 changes" even when real activity happened earlier in the day.
+//
+// This function queries BC for the current inventory_level of every tracked
+// variant on startup and writes each as a "boot baseline" entry to the log.
+// Subsequent webhook/reconciliation writes are normal. The daily report's
+// first-vs-last comparison then has a true baseline for the day even after
+// a fresh boot, so any sale that happens after boot will register as a delta.
+//
+// Note: sales that happened BEFORE a mid-day restart are still lost from
+// the log (the entries were wiped). A Render Persistent Disk would fix that.
+
+/** Walk every mapping file and return a flat list of tracked variants with
+ *  enough metadata to query and log each one. */
+function gatherTrackedVariants() {
+  const out = [];
+
+  for (const [grainSku, entry] of Object.entries(grainMapping)) {
+    if (entry.bc_grain && entry.bc_grain.product_id && entry.bc_grain.variants) {
+      for (const [lbs, vData] of Object.entries(entry.bc_grain.variants)) {
+        if (vData.variant_id) {
+          out.push({
+            product_id: entry.bc_grain.product_id, variant_id: vData.variant_id,
+            kind: 'grain', sku: grainSku, name: entry.name || grainSku,
+            size: `${lbs} LB`,
+          });
+        }
+      }
+    }
+    if (entry.bc_flour && entry.bc_flour.variants) {
+      for (const [lbs, vData] of Object.entries(entry.bc_flour.variants)) {
+        if (vData.bc_product_id && vData.bc_variant_id) {
+          out.push({
+            product_id: vData.bc_product_id, variant_id: vData.bc_variant_id,
+            kind: 'flour', sku: grainSku, name: entry.name || grainSku,
+            size: `${lbs} LB`,
+          });
+        }
+      }
+    }
+  }
+  for (const [sku, entry] of Object.entries(coffeeMapping)) {
+    if (entry.bc_per_oz && entry.bc_per_oz.product_id && entry.bc_per_oz.variant_id) {
+      out.push({
+        product_id: entry.bc_per_oz.product_id, variant_id: entry.bc_per_oz.variant_id,
+        kind: 'coffee', sku, name: entry.name || sku, size: 'per oz',
+      });
+    }
+  }
+  for (const [sku, entry] of Object.entries(millMapping)) {
+    if (entry.bc_product_id && entry.bc_variant_id) {
+      out.push({
+        product_id: entry.bc_product_id, variant_id: entry.bc_variant_id,
+        kind: 'mill', sku, name: entry.name || sku, size: 'unit',
+      });
+    }
+  }
+  for (const [sku, entry] of Object.entries(brewGrainMapping)) {
+    if (entry.bc_per_oz && entry.bc_per_oz.product_id && entry.bc_per_oz.variant_id) {
+      out.push({
+        product_id: entry.bc_per_oz.product_id, variant_id: entry.bc_per_oz.variant_id,
+        kind: 'brewgrain', sku, name: entry.name || sku, size: 'per oz',
+      });
+    }
+  }
+  for (const [sku, entry] of Object.entries(hopsMapping)) {
+    if (entry.bc_per_oz && entry.bc_per_oz.product_id && entry.bc_per_oz.variant_id) {
+      out.push({
+        product_id: entry.bc_per_oz.product_id, variant_id: entry.bc_per_oz.variant_id,
+        kind: 'hops', sku, name: entry.name || sku, size: 'per oz',
+      });
+    }
+  }
+  return out;
+}
+
+/** Query BC for the current inventory_level of every tracked variant and
+ *  write each as a baseline entry to the audit log. Grouped per product to
+ *  minimize API calls (one GET per product fetches all its variants). */
+async function logBootSnapshot() {
+  const tracked = gatherTrackedVariants();
+  if (tracked.length === 0) {
+    console.log('[LOG] Boot snapshot: nothing tracked yet, skipping');
+    return;
+  }
+  console.log(`[LOG] Boot snapshot: querying ${tracked.length} tracked variants…`);
+
+  // Group by product so we can fetch all variants of a product in one call.
+  const byProduct = new Map();
+  for (const t of tracked) {
+    if (!byProduct.has(t.product_id)) byProduct.set(t.product_id, []);
+    byProduct.get(t.product_id).push(t);
+  }
+
+  let written = 0, failed = 0;
+  for (const [pid, variants] of byProduct.entries()) {
+    try {
+      const data = await bcGet(`/v3/catalog/products/${pid}/variants?include_fields=id,sku,inventory_level&limit=250`);
+      const bcVariants = (data && data.data) || [];
+      const bcByVid = new Map(bcVariants.map(v => [v.id, v]));
+      for (const t of variants) {
+        const bv = bcByVid.get(t.variant_id);
+        if (!bv) continue;
+        const level = bv.inventory_level || 0;
+        try {
+          const line = JSON.stringify({
+            ts: new Date().toISOString(),
+            kind: t.kind, sku: t.sku, name: t.name, size: t.size,
+            product_id: t.product_id, variant_id: t.variant_id,
+            level, boot_snapshot: true,
+          }) + '\n';
+          fs.appendFileSync(SYNC_BC_LOG_FILE, line);
+          written++;
+        } catch (e) {
+          failed++;
+        }
+      }
+    } catch (e) {
+      console.error(`[LOG] Boot snapshot: product #${pid} fetch failed: ${e.message}`);
+      failed += variants.length;
+    }
+    // Small pause to stay polite with BC rate limits during boot
+    await new Promise(r => setTimeout(r, 100));
+  }
+  console.log(`[LOG] Boot snapshot complete: ${written} baseline entries written, ${failed} failed`);
 }
 
 // ── Helpers: Square ─────────────────────────────────────────────────────────
@@ -2265,12 +2414,19 @@ app.listen(PORT, async () => {
   console.log(`   Brewing grain bag variants (for bag-to-bulk): ${Object.keys(sqBagVariationToBrewGrain).length}`);
   console.log(`   BC hops variant lookups: ${Object.keys(bcVariantToHops).length}`);
 
+  // Write a baseline snapshot to the audit log BEFORE the first reconciliation,
+  // so the daily report's first-vs-last comparison always has a real starting
+  // value (even on days when a deploy or restart wiped the log).
+  // Fire-and-forget — we don't block startup on this.
+  logBootSnapshot().catch(e => console.error(`[LOG] Boot snapshot error: ${e.message}`));
+
   // Schedule recurring reconciliation
   if (RECONCILE_MINS > 0) {
     setInterval(fullReconciliation, RECONCILE_MINS * 60 * 1000);
     console.log(`   ⏰ First reconciliation in ${RECONCILE_MINS} minutes`);
 
-    // Run initial reconciliation 30 seconds after boot
+    // Run initial reconciliation 30 seconds after boot (gives the boot
+    // snapshot ~30s to complete first)
     setTimeout(fullReconciliation, 30000);
     console.log(`   ⏰ Initial reconciliation in 30 seconds\n`);
   }

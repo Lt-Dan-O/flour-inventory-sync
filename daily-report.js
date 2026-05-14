@@ -30,11 +30,27 @@ const REPORT_FROM   = process.env.REPORT_FROM || 'onboarding@resend.dev';
 const REPORT_TO     = process.env.REPORT_TO   || 'dannickels4@yahoo.com';
 const SYNC_APP_ID   = 'sq0idp-5SrSlq7mn0lCWZQKk3G_cg';
 
-// File-based dedup — survives in-process restarts on Render
-const LAST_SENT_FILE = path.join(__dirname, '.last-report-date');
+// Auto-detect Render Persistent Disk at /var/data; fall back to __dirname.
+// Must match the same logic used in server.js so both processes read/write
+// the same files.
+function pickPersistentDir() {
+  try {
+    if (fs.existsSync('/var/data') && fs.statSync('/var/data').isDirectory()) {
+      const probe = path.join('/var/data', '.write-probe');
+      fs.writeFileSync(probe, '');
+      fs.unlinkSync(probe);
+      return '/var/data';
+    }
+  } catch (e) { /* fall through */ }
+  return __dirname;
+}
+const PERSIST_DIR = pickPersistentDir();
+
+// File-based dedup — when on a persistent disk, survives restarts permanently
+const LAST_SENT_FILE = path.join(PERSIST_DIR, '.last-report-date');
 
 // BC-write audit log written by server.js (one JSON line per BC inventory PUT)
-const SYNC_BC_LOG_FILE = path.join(__dirname, '.sync-bc-writes.log');
+const SYNC_BC_LOG_FILE = path.join(PERSIST_DIR, '.sync-bc-writes.log');
 
 if (RESEND_API_KEY) {
   console.log(`[REPORT] Email configured via Resend → ${REPORT_TO}`);
