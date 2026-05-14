@@ -500,9 +500,28 @@ function gatherTrackedVariants() {
   return out;
 }
 
+// Fetch BC variants for one product with built-in 429 retry. bcGet itself
+// doesn't retry on rate-limit; we layer that here for the boot snapshot.
+async function fetchVariantsWithRetry(pid, maxAttempts = 5) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const data = await bcGet(`/v3/catalog/products/${pid}/variants?include_fields=id,sku,inventory_level&limit=250`);
+      return (data && data.data) || [];
+    } catch (e) {
+      const is429 = /\b429\b/.test(e.message || '');
+      if (!is429 || attempt === maxAttempts) throw e;
+      const backoff = Math.min(15000, 1000 * Math.pow(2, attempt - 1));
+      await new Promise(r => setTimeout(r, backoff));
+    }
+  }
+  return [];
+}
+
 /** Query BC for the current inventory_level of every tracked variant and
  *  write each as a baseline entry to the audit log. Grouped per product to
- *  minimize API calls (one GET per product fetches all its variants). */
+ *  minimize API calls (one GET per product fetches all its variants).
+ *  Handles 429 rate limiting with exponential backoff and a deferred retry
+ *  pass for any products that still failed after the main loop. */
 async function logBootSnapshot() {
   const tracked = gatherTrackedVariants();
   if (tracked.length === 0) {
@@ -518,37 +537,63 @@ async function logBootSnapshot() {
     byProduct.get(t.product_id).push(t);
   }
 
-  let written = 0, failed = 0;
+  async function snapshotOneProduct(pid, variants) {
+    let written = 0;
+    const bcVariants = await fetchVariantsWithRetry(pid);
+    const bcByVid = new Map(bcVariants.map(v => [v.id, v]));
+    for (const t of variants) {
+      const bv = bcByVid.get(t.variant_id);
+      if (!bv) continue;
+      const level = bv.inventory_level || 0;
+      try {
+        const line = JSON.stringify({
+          ts: new Date().toISOString(),
+          kind: t.kind, sku: t.sku, name: t.name, size: t.size,
+          product_id: t.product_id, variant_id: t.variant_id,
+          level, boot_snapshot: true,
+        }) + '\n';
+        fs.appendFileSync(SYNC_BC_LOG_FILE, line);
+        written++;
+      } catch (e) { /* swallow per-line write errors */ }
+    }
+    return written;
+  }
+
+  let written = 0;
+  const failedProducts = [];
   for (const [pid, variants] of byProduct.entries()) {
     try {
-      const data = await bcGet(`/v3/catalog/products/${pid}/variants?include_fields=id,sku,inventory_level&limit=250`);
-      const bcVariants = (data && data.data) || [];
-      const bcByVid = new Map(bcVariants.map(v => [v.id, v]));
-      for (const t of variants) {
-        const bv = bcByVid.get(t.variant_id);
-        if (!bv) continue;
-        const level = bv.inventory_level || 0;
-        try {
-          const line = JSON.stringify({
-            ts: new Date().toISOString(),
-            kind: t.kind, sku: t.sku, name: t.name, size: t.size,
-            product_id: t.product_id, variant_id: t.variant_id,
-            level, boot_snapshot: true,
-          }) + '\n';
-          fs.appendFileSync(SYNC_BC_LOG_FILE, line);
-          written++;
-        } catch (e) {
-          failed++;
-        }
-      }
+      written += await snapshotOneProduct(pid, variants);
     } catch (e) {
       console.error(`[LOG] Boot snapshot: product #${pid} fetch failed: ${e.message}`);
-      failed += variants.length;
+      failedProducts.push({ pid, variants });
     }
-    // Small pause to stay polite with BC rate limits during boot
-    await new Promise(r => setTimeout(r, 100));
+    // Slightly longer delay than before to stay under BC's burst threshold
+    await new Promise(r => setTimeout(r, 200));
   }
-  console.log(`[LOG] Boot snapshot complete: ${written} baseline entries written, ${failed} failed`);
+
+  // Deferred retry pass for products that failed in the main loop (typically
+  // 429s that even the in-call retry couldn't clear). Wait a chunk of time
+  // first to let BC's rate window reset, then walk slowly.
+  if (failedProducts.length > 0) {
+    console.log(`[LOG] Boot snapshot: ${failedProducts.length} product(s) failed first pass; retrying after 30s…`);
+    await new Promise(r => setTimeout(r, 30000));
+    let recovered = 0;
+    const stillFailed = [];
+    for (const { pid, variants } of failedProducts) {
+      try {
+        written += await snapshotOneProduct(pid, variants);
+        recovered++;
+      } catch (e) {
+        stillFailed.push(pid);
+      }
+      await new Promise(r => setTimeout(r, 500));
+    }
+    console.log(`[LOG] Boot snapshot retry: recovered ${recovered}/${failedProducts.length}` +
+                (stillFailed.length ? `, still failed: ${stillFailed.join(',')}` : ''));
+  }
+
+  console.log(`[LOG] Boot snapshot complete: ${written} baseline entries written`);
 }
 
 // ── Helpers: Square ─────────────────────────────────────────────────────────
