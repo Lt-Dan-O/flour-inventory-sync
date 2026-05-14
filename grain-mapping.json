@@ -537,6 +537,15 @@
           "sku": "FM-553439K-10"
         }
       }
+    },
+    "auto_preorder": {
+      "trigger_at_lbs": 0,
+      "berry_product_id": 4060,
+      "flour_product_id": 4370,
+      "preorder_message_berry": "Preorder in 25lb increments",
+      "preorder_message_flour": "Preorder - milled from our next 50 lb bag arrival",
+      "available_description_berry": "1, 5, and 10 LB ship from current stock. The 25 LB bag is special-ordered (we receive these in 50 lb increments) - please allow 5-10 business days for the next arrival. We'll email you if anything is expected to exceed that.",
+      "available_description_flour": "Milled to order from our sprouted berries. 1 LB ships within 1-3 business days from current stock. Between supplier shipments your order fills with our next 50 lb arrival (5-10 business days). We'll email you if anything longer is expected."
     }
   },
   "617442Z": {
@@ -672,6 +681,15 @@
           "sku": "FM-4063-10"
         }
       }
+    },
+    "auto_preorder": {
+      "trigger_at_lbs": 0,
+      "berry_product_id": 4063,
+      "flour_product_id": 4373,
+      "preorder_message_berry": "Preorder in 25lb increments",
+      "preorder_message_flour": "Preorder - milled from our next 50 lb bag arrival",
+      "available_description_berry": "1, 5, and 10 LB ship from current stock. The 25 LB bag is special-ordered (we receive these in 50 lb increments) - please allow 5-10 business days for the next arrival. We'll email you if anything is expected to exceed that.",
+      "available_description_flour": "Milled to order from our sprouted berries. 1 LB ships within 1-3 business days from current stock. Between supplier shipments your order fills with our next 50 lb arrival (5-10 business days). We'll email you if anything longer is expected."
     }
   },
   "4573489": {
@@ -897,6 +915,15 @@
           "sku": "FM-299944Q-10"
         }
       }
+    },
+    "auto_preorder": {
+      "trigger_at_lbs": 0,
+      "berry_product_id": 4070,
+      "flour_product_id": 4358,
+      "preorder_message_berry": "Preorder in 25lb increments",
+      "preorder_message_flour": "Preorder - milled from our next 50 lb bag arrival",
+      "available_description_berry": "1, 5, and 10 LB ship from current stock. The 25 LB bag is special-ordered (we receive these in 50 lb increments) - please allow 5-10 business days for the next arrival. We'll email you if anything is expected to exceed that.",
+      "available_description_flour": "Milled to order from our sprouted berries. 1 LB ships within 1-3 business days from current stock. Between supplier shipments your order fills with our next 50 lb arrival (5-10 business days). We'll email you if anything longer is expected."
     }
   },
   "6957315": {
@@ -1032,6 +1059,15 @@
           "sku": "FM-G741868-10"
         }
       }
+    },
+    "auto_preorder": {
+      "trigger_at_lbs": 0,
+      "berry_product_id": 4074,
+      "flour_product_id": 4365,
+      "preorder_message_berry": "Preorder in 25lb increments",
+      "preorder_message_flour": "Preorder - milled from our next 50 lb bag arrival",
+      "available_description_berry": "1, 5, and 10 LB ship from current stock. The 25 LB bag is special-ordered (we receive these in 50 lb increments) - please allow 5-10 business days for the next arrival. We'll email you if anything is expected to exceed that.",
+      "available_description_flour": "Milled to order from our sprouted berries. 1 LB ships within 1-3 business days from current stock. Between supplier shipments your order fills with our next 50 lb arrival (5-10 business days). We'll email you if anything longer is expected."
     }
   },
   "R932264": {
@@ -1093,5 +1129,50 @@
       "variants": {}
     },
     "flour_excluded": true
+  },
+  "8299189": {
+    "name": "Soft Red Wheat Berries, Organic",
+    "square_variation_id": "2LDLFPRWZLJKWAMJQ2BOYNZ5",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bc_grain": {
+      "product_id": 4553,
+      "variants": {
+        "1": {
+          "variant_id": 9236,
+          "sku": "8299189"
+        },
+        "5": {
+          "variant_id": 9237,
+          "sku": "8299189-5"
+        },
+        "10": {
+          "variant_id": 9238,
+          "sku": "8299189-10"
+        },
+        "25": {
+          "variant_id": 9239,
+          "sku": "8299189-25"
+        }
+      }
+    },
+    "bc_flour": {
+      "variants": {
+        "1": {
+          "bc_product_id": 4553,
+          "bc_variant_id": 9236,
+          "sku": "FM-8299189"
+        },
+        "5": {
+          "bc_product_id": 4553,
+          "bc_variant_id": 9237,
+          "sku": "FM-8299189-5"
+        },
+        "10": {
+          "bc_product_id": 4553,
+          "bc_variant_id": 9238,
+          "sku": "FM-8299189-10"
+        }
+      }
+    }
   }
 }

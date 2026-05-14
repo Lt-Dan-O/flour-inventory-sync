@@ -973,6 +973,60 @@ async function recalculateGrain(grainSku, options = {}) {
 
   const failTag = (grainFailures || flourFailures) ? ` [WITH FAILURES: grain=${grainFailures}, flour=${flourFailures}]` : '';
   console.log(`  [${entry.name}] BC updated: grain=${JSON.stringify(grainLevels)}, flour 1/5/10=${availableLbs}/${Math.floor(availableLbs / 5)}/${Math.floor(availableLbs / 10)}${failTag}`);
+
+  // 5. Auto-preorder flip (for sprouted berries + their flours).
+  // When per-pound stock crosses the trigger threshold (0 by default), the berry
+  // and flour products' top-level `availability` field is flipped between
+  // "available" and "preorder". Only writes when the current state is wrong,
+  // so steady-state polls are no-ops.
+  if (entry.auto_preorder) {
+    try {
+      await applyAutoPreorder(entry, availableLbs);
+    } catch (e) {
+      console.error(`    auto_preorder ERROR for ${grainSku}: ${e.message}`);
+    }
+  }
+}
+
+// ── Auto-preorder helper ───────────────────────────────────────────────────
+// Flips a sprouted product's BC availability between "available" and "preorder"
+// based on the current Square per-pound count. Writes only when the desired
+// state differs from BC's current state.
+async function applyAutoPreorder(entry, availableLbs) {
+  const cfg = entry.auto_preorder;
+  if (!cfg || !cfg.berry_product_id) return;
+
+  const trigger = (typeof cfg.trigger_at_lbs === 'number') ? cfg.trigger_at_lbs : 0;
+  const desired = (availableLbs <= trigger) ? 'preorder' : 'available';
+
+  const targets = [
+    { kind: 'berry', product_id: cfg.berry_product_id, msg: cfg.preorder_message_berry || 'Preorder' },
+    { kind: 'flour', product_id: cfg.flour_product_id, msg: cfg.preorder_message_flour || 'Preorder' },
+  ].filter(t => t.product_id);
+
+  for (const t of targets) {
+    let current;
+    try {
+      const r = await bcGet(`/v3/catalog/products/${t.product_id}?include_fields=availability,preorder_message`);
+      current = r && r.data ? r.data.availability : null;
+    } catch (e) {
+      console.error(`    auto_preorder bcGet ${t.product_id}: ${e.message}`);
+      continue;
+    }
+
+    if (current === desired) continue;  // already in the right state
+
+    const body = { availability: desired };
+    if (desired === 'preorder') body.preorder_message = t.msg;
+    else body.preorder_message = '';
+
+    try {
+      await bcPut(`/v3/catalog/products/${t.product_id}`, body);
+      console.log(`    [${entry.name}] ${t.kind} (${t.product_id}) availability ${current} -> ${desired}`);
+    } catch (e) {
+      console.error(`    auto_preorder bcPut ${t.product_id}: ${e.message}`);
+    }
+  }
 }
 
 // ── Core: Recalculate coffee BC per-oz variant from Square truth ────────────
