@@ -34,8 +34,6 @@
 
 const express = require('express');
 const fetch = require('node-fetch');
-const fs = require('fs');
-const path = require('path');
 const grainMapping = require('./grain-mapping.json');
 const coffeeMapping = require('./coffee-mapping.json');
 const millMapping = require('./mill-mapping.json');
@@ -143,6 +141,13 @@ for (const [millSku, entry] of Object.entries(millMapping)) {
 const bagCorrectionInProgress = new Set();
 // Deduplication cache: track recently processed webhook events (variation → timestamp)
 const recentBagWebhooks = new Map();
+// Deduplication cache for BC order-created webhooks (orderId → timestamp).
+// BigCommerce delivers webhooks at-least-once and retries when it does not receive
+// a timely 2xx (e.g. during a Render free-tier cold start). Without this guard, a
+// redelivered order-created event re-deducts stock from Square. See incident
+// 2026-05-22: a single BC order double-deducted the Bronze trim NutriMill.
+const recentOrderWebhooks = new Map();
+const ORDER_DEDUP_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
 // Build static lookups from brewing-grain-mapping.json
 for (const [brewSku, entry] of Object.entries(brewGrainMapping)) {
@@ -337,263 +342,11 @@ async function getReservedLbs() {
   return reserved;
 }
 
-// ── BC-write audit log ─────────────────────────────────────────────────────
-// Each successful BC inventory write is appended to this file as one JSON line.
-// The daily report reads it to show "Square → BC" sync activity for yesterday.
-//
-// Path selection: if a Render Persistent Disk is mounted at /var/data we use
-// it (log survives deploys and restarts permanently). Otherwise we fall back
-// to __dirname which is ephemeral on Render free/Starter tiers (log may be
-// wiped on every restart). The boot snapshot below mitigates that fallback
-// case by writing a baseline on each startup.
-function pickPersistentDir() {
-  try {
-    if (fs.existsSync('/var/data') && fs.statSync('/var/data').isDirectory()) {
-      // Sanity check we can actually write to it
-      const probe = path.join('/var/data', '.write-probe');
-      fs.writeFileSync(probe, '');
-      fs.unlinkSync(probe);
-      return '/var/data';
-    }
-  } catch (e) { /* fall through */ }
-  return __dirname;
-}
-const LOG_DIR = pickPersistentDir();
-const SYNC_BC_LOG_FILE = path.join(LOG_DIR, '.sync-bc-writes.log');
-console.log(`[LOG] Audit log path: ${SYNC_BC_LOG_FILE} ` +
-            `${LOG_DIR === '/var/data' ? '(persistent disk)' : '(ephemeral — survives only until next restart)'}`);
-
-function describeVariant(variantId) {
-  if (bcVariantToGrain[variantId]) {
-    const e = bcVariantToGrain[variantId];
-    const entry = grainMapping[e.grainSku];
-    return { kind: e.type || 'grain', sku: e.grainSku,
-             name: entry?.name || e.grainSku, size: `${e.lbs} LB` };
-  }
-  if (bcVariantToCoffee[variantId]) {
-    const e = bcVariantToCoffee[variantId];
-    const entry = coffeeMapping[e.coffeeSku];
-    return { kind: 'coffee', sku: e.coffeeSku,
-             name: entry?.name || e.coffeeSku, size: 'per oz' };
-  }
-  if (bcVariantToMill[variantId]) {
-    const e = bcVariantToMill[variantId];
-    const entry = millMapping[e.millSku];
-    return { kind: 'mill', sku: e.millSku,
-             name: entry?.name || e.millSku, size: 'unit' };
-  }
-  if (bcVariantToBrewGrain[variantId]) {
-    const e = bcVariantToBrewGrain[variantId];
-    const entry = brewGrainMapping[e.brewGrainSku];
-    return { kind: 'brewgrain', sku: e.brewGrainSku,
-             name: entry?.name || e.brewGrainSku, size: 'per oz' };
-  }
-  if (bcVariantToHops[variantId]) {
-    const e = bcVariantToHops[variantId];
-    const entry = hopsMapping[e.hopsSku];
-    return { kind: 'hops', sku: e.hopsSku,
-             name: entry?.name || e.hopsSku, size: 'per oz' };
-  }
-  return { kind: 'unknown', sku: '', name: `variant_${variantId}`, size: '' };
-}
-
-function logBcWrite(productId, variantId, level) {
-  try {
-    const desc = describeVariant(variantId);
-    const line = JSON.stringify({
-      ts: new Date().toISOString(),
-      kind: desc.kind, sku: desc.sku, name: desc.name, size: desc.size,
-      product_id: productId, variant_id: variantId, level: Math.max(0, level)
-    }) + '\n';
-    fs.appendFileSync(SYNC_BC_LOG_FILE, line);
-  } catch (e) {
-    console.error(`[LOG] BC-write log failed: ${e.message}`);
-  }
-}
-
 /** Update a single BC variant's inventory_level */
 async function setBcVariantStock(productId, variantId, level) {
   await bcPut(`/v3/catalog/products/${productId}/variants/${variantId}`, {
     inventory_level: Math.max(0, level)
   });
-  // Append to the audit log AFTER the PUT succeeds (so failed writes don't
-  // pollute the log).
-  logBcWrite(productId, variantId, level);
-}
-
-// ── Boot snapshot ──────────────────────────────────────────────────────────
-// Render's free/Starter tier has an ephemeral filesystem: the audit log gets
-// wiped on every deploy or restart. Without a snapshot at boot, the daily
-// report sees only post-restart writes (all the same value) and reports
-// "0 changes" even when real activity happened earlier in the day.
-//
-// This function queries BC for the current inventory_level of every tracked
-// variant on startup and writes each as a "boot baseline" entry to the log.
-// Subsequent webhook/reconciliation writes are normal. The daily report's
-// first-vs-last comparison then has a true baseline for the day even after
-// a fresh boot, so any sale that happens after boot will register as a delta.
-//
-// Note: sales that happened BEFORE a mid-day restart are still lost from
-// the log (the entries were wiped). A Render Persistent Disk would fix that.
-
-/** Walk every mapping file and return a flat list of tracked variants with
- *  enough metadata to query and log each one. */
-function gatherTrackedVariants() {
-  const out = [];
-
-  for (const [grainSku, entry] of Object.entries(grainMapping)) {
-    if (entry.bc_grain && entry.bc_grain.product_id && entry.bc_grain.variants) {
-      for (const [lbs, vData] of Object.entries(entry.bc_grain.variants)) {
-        if (vData.variant_id) {
-          out.push({
-            product_id: entry.bc_grain.product_id, variant_id: vData.variant_id,
-            kind: 'grain', sku: grainSku, name: entry.name || grainSku,
-            size: `${lbs} LB`,
-          });
-        }
-      }
-    }
-    if (entry.bc_flour && entry.bc_flour.variants) {
-      for (const [lbs, vData] of Object.entries(entry.bc_flour.variants)) {
-        if (vData.bc_product_id && vData.bc_variant_id) {
-          out.push({
-            product_id: vData.bc_product_id, variant_id: vData.bc_variant_id,
-            kind: 'flour', sku: grainSku, name: entry.name || grainSku,
-            size: `${lbs} LB`,
-          });
-        }
-      }
-    }
-  }
-  for (const [sku, entry] of Object.entries(coffeeMapping)) {
-    if (entry.bc_per_oz && entry.bc_per_oz.product_id && entry.bc_per_oz.variant_id) {
-      out.push({
-        product_id: entry.bc_per_oz.product_id, variant_id: entry.bc_per_oz.variant_id,
-        kind: 'coffee', sku, name: entry.name || sku, size: 'per oz',
-      });
-    }
-  }
-  for (const [sku, entry] of Object.entries(millMapping)) {
-    if (entry.bc_product_id && entry.bc_variant_id) {
-      out.push({
-        product_id: entry.bc_product_id, variant_id: entry.bc_variant_id,
-        kind: 'mill', sku, name: entry.name || sku, size: 'unit',
-      });
-    }
-  }
-  for (const [sku, entry] of Object.entries(brewGrainMapping)) {
-    if (entry.bc_per_oz && entry.bc_per_oz.product_id && entry.bc_per_oz.variant_id) {
-      out.push({
-        product_id: entry.bc_per_oz.product_id, variant_id: entry.bc_per_oz.variant_id,
-        kind: 'brewgrain', sku, name: entry.name || sku, size: 'per oz',
-      });
-    }
-  }
-  for (const [sku, entry] of Object.entries(hopsMapping)) {
-    if (entry.bc_per_oz && entry.bc_per_oz.product_id && entry.bc_per_oz.variant_id) {
-      out.push({
-        product_id: entry.bc_per_oz.product_id, variant_id: entry.bc_per_oz.variant_id,
-        kind: 'hops', sku, name: entry.name || sku, size: 'per oz',
-      });
-    }
-  }
-  return out;
-}
-
-// Fetch BC variants for one product with built-in 429 retry. bcGet itself
-// doesn't retry on rate-limit; we layer that here for the boot snapshot.
-async function fetchVariantsWithRetry(pid, maxAttempts = 5) {
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      const data = await bcGet(`/v3/catalog/products/${pid}/variants?include_fields=id,sku,inventory_level&limit=250`);
-      return (data && data.data) || [];
-    } catch (e) {
-      const is429 = /\b429\b/.test(e.message || '');
-      if (!is429 || attempt === maxAttempts) throw e;
-      const backoff = Math.min(15000, 1000 * Math.pow(2, attempt - 1));
-      await new Promise(r => setTimeout(r, backoff));
-    }
-  }
-  return [];
-}
-
-/** Query BC for the current inventory_level of every tracked variant and
- *  write each as a baseline entry to the audit log. Grouped per product to
- *  minimize API calls (one GET per product fetches all its variants).
- *  Handles 429 rate limiting with exponential backoff and a deferred retry
- *  pass for any products that still failed after the main loop. */
-async function logBootSnapshot() {
-  const tracked = gatherTrackedVariants();
-  if (tracked.length === 0) {
-    console.log('[LOG] Boot snapshot: nothing tracked yet, skipping');
-    return;
-  }
-  console.log(`[LOG] Boot snapshot: querying ${tracked.length} tracked variants…`);
-
-  // Group by product so we can fetch all variants of a product in one call.
-  const byProduct = new Map();
-  for (const t of tracked) {
-    if (!byProduct.has(t.product_id)) byProduct.set(t.product_id, []);
-    byProduct.get(t.product_id).push(t);
-  }
-
-  async function snapshotOneProduct(pid, variants) {
-    let written = 0;
-    const bcVariants = await fetchVariantsWithRetry(pid);
-    const bcByVid = new Map(bcVariants.map(v => [v.id, v]));
-    for (const t of variants) {
-      const bv = bcByVid.get(t.variant_id);
-      if (!bv) continue;
-      const level = bv.inventory_level || 0;
-      try {
-        const line = JSON.stringify({
-          ts: new Date().toISOString(),
-          kind: t.kind, sku: t.sku, name: t.name, size: t.size,
-          product_id: t.product_id, variant_id: t.variant_id,
-          level, boot_snapshot: true,
-        }) + '\n';
-        fs.appendFileSync(SYNC_BC_LOG_FILE, line);
-        written++;
-      } catch (e) { /* swallow per-line write errors */ }
-    }
-    return written;
-  }
-
-  let written = 0;
-  const failedProducts = [];
-  for (const [pid, variants] of byProduct.entries()) {
-    try {
-      written += await snapshotOneProduct(pid, variants);
-    } catch (e) {
-      console.error(`[LOG] Boot snapshot: product #${pid} fetch failed: ${e.message}`);
-      failedProducts.push({ pid, variants });
-    }
-    // Slightly longer delay than before to stay under BC's burst threshold
-    await new Promise(r => setTimeout(r, 200));
-  }
-
-  // Deferred retry pass for products that failed in the main loop (typically
-  // 429s that even the in-call retry couldn't clear). Wait a chunk of time
-  // first to let BC's rate window reset, then walk slowly.
-  if (failedProducts.length > 0) {
-    console.log(`[LOG] Boot snapshot: ${failedProducts.length} product(s) failed first pass; retrying after 30s…`);
-    await new Promise(r => setTimeout(r, 30000));
-    let recovered = 0;
-    const stillFailed = [];
-    for (const { pid, variants } of failedProducts) {
-      try {
-        written += await snapshotOneProduct(pid, variants);
-        recovered++;
-      } catch (e) {
-        stillFailed.push(pid);
-      }
-      await new Promise(r => setTimeout(r, 500));
-    }
-    console.log(`[LOG] Boot snapshot retry: recovered ${recovered}/${failedProducts.length}` +
-                (stillFailed.length ? `, still failed: ${stillFailed.join(',')}` : ''));
-  }
-
-  console.log(`[LOG] Boot snapshot complete: ${written} baseline entries written`);
 }
 
 // ── Helpers: Square ─────────────────────────────────────────────────────────
@@ -808,8 +561,14 @@ async function bulkFetchSquareCounts(variationIds) {
 }
 
 /** Adjust Square inventory (negative = deduct) */
-async function adjustSquareInventory(variationId, adjustment) {
-  const idempotencyKey = `adj-${variationId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+async function adjustSquareInventory(variationId, adjustment, idempotencyKey) {
+  // A caller may pass a deterministic idempotencyKey (e.g. derived from the BC order +
+  // line item) so that a duplicate webhook delivery is rejected by Square itself, even
+  // if this process restarted and lost its in-memory dedup cache. When omitted we fall
+  // back to a unique key (used by callers where each adjustment is genuinely distinct).
+  if (!idempotencyKey) {
+    idempotencyKey = `adj-${variationId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }
 
   const change = {
     type: 'ADJUSTMENT',
@@ -1374,6 +1133,21 @@ app.post('/webhooks/order-created', async (req, res) => {
     const orderId = req.body?.data?.id;
     if (!orderId) return;
 
+    // Idempotency guard: BigCommerce can deliver the same order-created event more than
+    // once (at-least-once delivery + retries on slow/cold-start responses). Skip any
+    // order we have already processed within the TTL so stock is never double-deducted.
+    const lastSeen = recentOrderWebhooks.get(orderId);
+    if (lastSeen && (Date.now() - lastSeen) < ORDER_DEDUP_TTL_MS) {
+      console.log(`\n=== BC Order #${orderId}: duplicate webhook within ${Math.round(ORDER_DEDUP_TTL_MS / 60000)}min, skipping ===\n`);
+      return;
+    }
+    recentOrderWebhooks.set(orderId, Date.now());
+    // Bounded cleanup of expired entries
+    if (recentOrderWebhooks.size > 500) {
+      const cutoff = Date.now() - ORDER_DEDUP_TTL_MS;
+      for (const [k, v] of recentOrderWebhooks) { if (v < cutoff) recentOrderWebhooks.delete(k); }
+    }
+
     console.log(`\n=== BC Order #${orderId} created ===`);
 
     const products = await bcGet(`/v2/orders/${orderId}/products`);
@@ -1395,7 +1169,7 @@ app.post('/webhooks/order-created', async (req, res) => {
         console.log(`  ${grainLookup.type} SKU ${item.sku} x${item.quantity} = ${lbsToDeduct} lbs → deduct from Square`);
 
         try {
-          await adjustSquareInventory(entry.square_variation_id, -lbsToDeduct);
+          await adjustSquareInventory(entry.square_variation_id, -lbsToDeduct, `bcorder-${orderId}-${item.id}`);
           console.log(`  → Square deducted ${lbsToDeduct} lbs from ${entry.name}`);
           affectedGrains.add(grainLookup.grainSku);
         } catch (e) {
@@ -1413,7 +1187,7 @@ app.post('/webhooks/order-created', async (req, res) => {
         console.log(`  coffee SKU ${item.sku} x${item.quantity} = ${ozToDeduct} oz → deduct from Square`);
 
         try {
-          await adjustSquareInventory(entry.square_variation_id, -ozToDeduct);
+          await adjustSquareInventory(entry.square_variation_id, -ozToDeduct, `bcorder-${orderId}-${item.id}`);
           console.log(`  → Square deducted ${ozToDeduct} oz from ${entry.name}`);
           affectedCoffees.add(coffeeLookup.coffeeSku);
         } catch (e) {
@@ -1431,7 +1205,7 @@ app.post('/webhooks/order-created', async (req, res) => {
         console.log(`  mill SKU ${item.sku} x${item.quantity} = ${unitsToDeduct} unit(s) → deduct from Square`);
 
         try {
-          await adjustSquareInventory(entry.square_variation_id, -unitsToDeduct);
+          await adjustSquareInventory(entry.square_variation_id, -unitsToDeduct, `bcorder-${orderId}-${item.id}`);
           console.log(`  → Square deducted ${unitsToDeduct} unit(s) from ${entry.name}`);
           affectedMills.add(millLookup.millSku);
         } catch (e) {
@@ -1449,7 +1223,7 @@ app.post('/webhooks/order-created', async (req, res) => {
         console.log(`  brew grain SKU ${item.sku} x${item.quantity} = ${ozToDeduct} oz → deduct from Square`);
 
         try {
-          await adjustSquareInventory(entry.square_bulk_variation_id, -ozToDeduct);
+          await adjustSquareInventory(entry.square_bulk_variation_id, -ozToDeduct, `bcorder-${orderId}-${item.id}`);
           console.log(`  → Square deducted ${ozToDeduct} oz from ${entry.name}`);
           affectedBrewGrains.add(brewGrainLookup.brewGrainSku);
         } catch (e) {
@@ -1467,7 +1241,7 @@ app.post('/webhooks/order-created', async (req, res) => {
         console.log(`  hops SKU ${item.sku} x${item.quantity} = ${ozToDeduct} oz → deduct from Square`);
 
         try {
-          await adjustSquareInventory(entry.square_variation_id, -ozToDeduct);
+          await adjustSquareInventory(entry.square_variation_id, -ozToDeduct, `bcorder-${orderId}-${item.id}`);
           console.log(`  → Square deducted ${ozToDeduct} oz from ${entry.name}`);
           affectedHops.add(hopsLookup.hopsSku);
         } catch (e) {
@@ -2513,19 +2287,12 @@ app.listen(PORT, async () => {
   console.log(`   Brewing grain bag variants (for bag-to-bulk): ${Object.keys(sqBagVariationToBrewGrain).length}`);
   console.log(`   BC hops variant lookups: ${Object.keys(bcVariantToHops).length}`);
 
-  // Write a baseline snapshot to the audit log BEFORE the first reconciliation,
-  // so the daily report's first-vs-last comparison always has a real starting
-  // value (even on days when a deploy or restart wiped the log).
-  // Fire-and-forget — we don't block startup on this.
-  logBootSnapshot().catch(e => console.error(`[LOG] Boot snapshot error: ${e.message}`));
-
   // Schedule recurring reconciliation
   if (RECONCILE_MINS > 0) {
     setInterval(fullReconciliation, RECONCILE_MINS * 60 * 1000);
     console.log(`   ⏰ First reconciliation in ${RECONCILE_MINS} minutes`);
 
-    // Run initial reconciliation 30 seconds after boot (gives the boot
-    // snapshot ~30s to complete first)
+    // Run initial reconciliation 30 seconds after boot
     setTimeout(fullReconciliation, 30000);
     console.log(`   ⏰ Initial reconciliation in 30 seconds\n`);
   }
