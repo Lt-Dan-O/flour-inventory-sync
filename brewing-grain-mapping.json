@@ -6,7 +6,11 @@
     "square_bulk_sku": "5890706",
     "square_location_id": "D7QJPMPVZME4K",
     "bag_variants": [],
-    "bc_per_oz": null
+    "bc_per_oz": {
+      "product_id": 3377,
+      "variant_id": 7902,
+      "sku": "5890706"
+    }
   },
   "8554799": {
     "name": "Pale Ale Malt",
@@ -108,7 +112,11 @@
     "square_bulk_sku": "CMU2",
     "square_location_id": "D7QJPMPVZME4K",
     "bag_variants": [],
-    "bc_per_oz": null
+    "bc_per_oz": {
+      "product_id": 4110,
+      "variant_id": 7769,
+      "sku": "CMU2"
+    }
   },
   "CWHE": {
     "name": "CaraWheat",
@@ -126,7 +134,11 @@
     "square_bulk_sku": "CHRY",
     "square_location_id": "D7QJPMPVZME4K",
     "bag_variants": [],
-    "bc_per_oz": null
+    "bc_per_oz": {
+      "product_id": 4527,
+      "variant_id": 9172,
+      "sku": "CHRY"
+    }
   },
   "CAR1": {
     "name": "Carafa I",
@@ -135,7 +147,11 @@
     "square_bulk_sku": "CAR1",
     "square_location_id": "D7QJPMPVZME4K",
     "bag_variants": [],
-    "bc_per_oz": null
+    "bc_per_oz": {
+      "product_id": 4524,
+      "variant_id": 9168,
+      "sku": "CAR1"
+    }
   },
   "CSD1": {
     "name": "Carafa Special I, DeHusked",
@@ -157,7 +173,11 @@
     "square_bulk_sku": "CAR3",
     "square_location_id": "D7QJPMPVZME4K",
     "bag_variants": [],
-    "bc_per_oz": null
+    "bc_per_oz": {
+      "product_id": 4109,
+      "variant_id": 7768,
+      "sku": "CAR3"
+    }
   },
   "CHWH": {
     "name": "Chocolate Wheat Malt",
@@ -192,7 +212,11 @@
     "square_bulk_sku": "CAR2",
     "square_location_id": "D7QJPMPVZME4K",
     "bag_variants": [],
-    "bc_per_oz": null
+    "bc_per_oz": {
+      "product_id": 4108,
+      "variant_id": 7767,
+      "sku": "CAR2"
+    }
   },
   "FLRI": {
     "name": "Flaked Rice",
@@ -354,7 +378,11 @@
         "bag_oz": 800
       }
     ],
-    "bc_per_oz": null
+    "bc_per_oz": {
+      "product_id": 3328,
+      "variant_id": 7678,
+      "sku": "3328-BU"
+    }
   },
   "BISC": {
     "name": "Biscuit Malt",
@@ -691,7 +719,11 @@
         "bag_oz": 880
       }
     ],
-    "bc_per_oz": null
+    "bc_per_oz": {
+      "product_id": 4111,
+      "variant_id": 7770,
+      "sku": "CMU3"
+    }
   },
   "VICT": {
     "name": "Victory Malted Barley",
@@ -739,7 +771,11 @@
     "square_bulk_sku": "B300",
     "square_location_id": "D7QJPMPVZME4K",
     "bag_variants": [],
-    "bc_per_oz": null
+    "bc_per_oz": {
+      "product_id": 4530,
+      "variant_id": 9178,
+      "sku": "B300"
+    }
   },
   "FLCO": {
     "name": "Flaked Corn",
@@ -996,7 +1032,11 @@
     "square_bulk_sku": "B500",
     "square_location_id": "D7QJPMPVZME4K",
     "bag_variants": [],
-    "bc_per_oz": null
+    "bc_per_oz": {
+      "product_id": 3374,
+      "variant_id": 7829,
+      "sku": "B500"
+    }
   },
   "PACH": {
     "name": "Pale Chocolate Malt",
@@ -1132,7 +1172,11 @@
     "square_bulk_sku": "extraspecial",
     "square_location_id": "D7QJPMPVZME4K",
     "bag_variants": [],
-    "bc_per_oz": null
+    "bc_per_oz": {
+      "product_id": 4529,
+      "variant_id": 9176,
+      "sku": "extraspecial"
+    }
   },
   "GROSW": {
     "name": "Oak Smoked Wheat",
@@ -1196,7 +1240,11 @@
     "square_bulk_sku": "724612Z",
     "square_location_id": "D7QJPMPVZME4K",
     "bag_variants": [],
-    "bc_per_oz": null
+    "bc_per_oz": {
+      "product_id": 4528,
+      "variant_id": 9174,
+      "sku": "724612Z"
+    }
   },
   "HAPO": {
     "name": "Apollo\u2122 Hops (Pellets)",
@@ -1209,6 +1257,52 @@
       "product_id": 3985,
       "variant_id": 8906,
       "sku": "HAPO"
+    }
+  },
+  "BDCS": {
+    "name": "Dextrose Monohydrate / Corn Sugar",
+    "square_item_id": "DGGCVTWCFVVF7TVJRXFHE2NE",
+    "square_bulk_variation_id": "OZHRV5ZPWVIOWU56BFOXB3YY",
+    "square_bulk_sku": "BDCS",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "6NDUF26IAZ65TPX7MRLNZ3Z4",
+        "name": "55lb bag Dextrose/Corn Sugar",
+        "bag_lbs": 55,
+        "bag_oz": 880
+      },
+      {
+        "square_variation_id": "3YA6RGUBUBPCRD4MAHMNWONG",
+        "name": "50lb bag - Dextrose/Corn Sugar",
+        "bag_lbs": 50,
+        "bag_oz": 800
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 1092,
+      "variant_id": 20263,
+      "sku": "AD300.-BU"
+    }
+  },
+  "PESM": {
+    "name": "Peat Smoked Malt",
+    "square_item_id": "JO2YYICX42JUW3O4QMJNPEVC",
+    "square_bulk_variation_id": "QAB4HUXJESREIPMVKLQS56Q3",
+    "square_bulk_sku": "PESM",
+    "square_location_id": "D7QJPMPVZME4K",
+    "bag_variants": [
+      {
+        "square_variation_id": "CTK3NGCEPPTYCFZT2LDKXEAF",
+        "name": "Peated Malt, 55lb",
+        "bag_lbs": 55,
+        "bag_oz": 880
+      }
+    ],
+    "bc_per_oz": {
+      "product_id": 2489,
+      "variant_id": 20264,
+      "sku": "2489-PL"
     }
   }
 }
