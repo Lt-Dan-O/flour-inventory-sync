@@ -1150,6 +1150,16 @@ app.post('/webhooks/order-created', async (req, res) => {
 
     console.log(`\n=== BC Order #${orderId} created ===`);
 
+    // Skip Incomplete (abandoned cart) / Cancelled / Declined orders.
+    // BC fires store/order/created on every checkout transition, including ones the
+    // customer never completes; without this guard, abandoned carts drain Square inventory.
+    const order = await bcGet(`/v2/orders/${orderId}`);
+    const SKIP_STATUSES = new Set([0, 5, 6]); // 0=Incomplete, 5=Cancelled, 6=Declined
+    if (SKIP_STATUSES.has(order.status_id)) {
+      console.log(`[ORDER ${orderId}] Skipping — status_id=${order.status_id} (${order.status}); no Square deduction`);
+      return;
+    }
+
     const products = await bcGet(`/v2/orders/${orderId}/products`);
     const affectedGrains = new Set();
     const affectedCoffees = new Set();
