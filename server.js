@@ -1150,13 +1150,21 @@ app.post('/webhooks/order-created', async (req, res) => {
 
     console.log(`\n=== BC Order #${orderId} created ===`);
 
-    // Skip Incomplete (abandoned cart) / Cancelled / Declined orders.
-    // BC fires store/order/created on every checkout transition, including ones the
-    // customer never completes; without this guard, abandoned carts drain Square inventory.
+    // Determine if this order should be skipped (clearly abandoned/cancelled/declined).
+    // status_id alone is too noisy: Apple Pay / Shop Pay / etc. briefly look like
+    // Incomplete (status_id=0) during the 1-3 second payment-capture window.
+    // Real-world precedent:
+    //   - Sandra Spitaleri abandoned cart #10777 (Jun 11): status=0, payment="", is_deleted=true → skip
+    //   - Beth Goodman real sale #10788 (Jun 16): status=0 at fire time, payment captured shortly after,
+    //     is_deleted=false → must NOT skip
     const order = await bcGet(`/v2/orders/${orderId}`);
-    const SKIP_STATUSES = new Set([0, 5, 6]); // 0=Incomplete, 5=Cancelled, 6=Declined
-    if (SKIP_STATUSES.has(order.status_id)) {
-      console.log(`[ORDER ${orderId}] Skipping — status_id=${order.status_id} (${order.status}); no Square deduction`);
+    const isAbandoned =
+      order.status_id === 5 ||                                                       // Cancelled
+      order.status_id === 6 ||                                                       // Declined
+      (order.status_id === 0 && (!order.payment_status || order.payment_status === '') && order.is_deleted === true);
+
+    if (isAbandoned) {
+      console.log(`[ORDER ${orderId}] Skipping — status=${order.status_id} (${order.status}), payment=${order.payment_status || '(empty)'}, deleted=${order.is_deleted}`);
       return;
     }
 
