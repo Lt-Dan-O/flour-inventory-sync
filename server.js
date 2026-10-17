@@ -32,6 +32,8 @@
  * "available" = Square total - reserved (pending/unshipped BC orders)
  */
 
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const fetch = require('node-fetch');
 const grainMapping = require('./grain-mapping.json');
@@ -350,11 +352,120 @@ async function getReservedLbs() {
   return reserved;
 }
 
+// ── BC-write audit log ─────────────────────────────────────────────────────
+// Each successful BC inventory write is appended to this file as one JSON line.
+// The daily report reads it to show "Square → BC" sync activity for yesterday.
+//
+// Path selection: if a Render Persistent Disk is mounted at /var/data we use
+// it (log survives deploys and restarts). Otherwise we fall back to __dirname,
+// which is ephemeral on Render (log is wiped on every deploy/restart).
+// Must match pickPersistentDir() in daily-report.js.
+function pickPersistentDir() {
+  try {
+    if (fs.existsSync('/var/data') && fs.statSync('/var/data').isDirectory()) {
+      // Sanity check we can actually write to it
+      const probe = path.join('/var/data', '.write-probe');
+      fs.writeFileSync(probe, '');
+      fs.unlinkSync(probe);
+      return '/var/data';
+    }
+  } catch (e) { /* fall through */ }
+  return __dirname;
+}
+const LOG_DIR = pickPersistentDir();
+const SYNC_BC_LOG_FILE = path.join(LOG_DIR, '.sync-bc-writes.log');
+// Reconciliation rewrites every tracked variant every RECONCILE_MINS, so the
+// log grows by several MB a day. Keep only the last few days (the report reads yesterday).
+const BC_WRITE_LOG_KEEP_DAYS = parseInt(process.env.BC_WRITE_LOG_KEEP_DAYS || '3', 10);
+console.log(`[LOG] Audit log path: ${SYNC_BC_LOG_FILE} ` +
+            `${LOG_DIR === '/var/data' ? '(persistent disk)' : '(ephemeral — survives only until next restart)'}` +
+            `${DRY_RUN ? ' — DRY_RUN: not written' : ''}`);
+
+function describeVariant(variantId) {
+  if (bcVariantToGrain[variantId]) {
+    const e = bcVariantToGrain[variantId];
+    const entry = grainMapping[e.grainSku];
+    return { kind: e.type || 'grain', sku: e.grainSku,
+             name: entry?.name || e.grainSku, size: `${e.lbs} LB` };
+  }
+  if (bcVariantToCoffee[variantId]) {
+    const e = bcVariantToCoffee[variantId];
+    const entry = coffeeMapping[e.coffeeSku];
+    return { kind: 'coffee', sku: e.coffeeSku,
+             name: entry?.name || e.coffeeSku, size: 'per oz' };
+  }
+  if (bcVariantToMill[variantId]) {
+    const e = bcVariantToMill[variantId];
+    const entry = millMapping[e.millSku];
+    return { kind: 'mill', sku: e.millSku,
+             name: entry?.name || e.millSku, size: 'unit' };
+  }
+  if (bcVariantToBrewGrain[variantId]) {
+    const e = bcVariantToBrewGrain[variantId];
+    const entry = brewGrainMapping[e.brewGrainSku];
+    return { kind: 'brewgrain', sku: e.brewGrainSku,
+             name: entry?.name || e.brewGrainSku, size: 'per oz' };
+  }
+  if (bcVariantToHops[variantId]) {
+    const e = bcVariantToHops[variantId];
+    const entry = hopsMapping[e.hopsSku];
+    return { kind: 'hops', sku: e.hopsSku,
+             name: entry?.name || e.hopsSku, size: 'per oz' };
+  }
+  return { kind: 'unknown', sku: '', name: `variant_${variantId}`, size: '' };
+}
+
+/** Drop audit-log lines older than BC_WRITE_LOG_KEEP_DAYS. Synchronous, so no
+ *  append can land between the read and the rename. */
+function pruneBcWriteLog() {
+  try {
+    if (!fs.existsSync(SYNC_BC_LOG_FILE)) return;
+    const cutoff = new Date(Date.now() - BC_WRITE_LOG_KEEP_DAYS * 86400000).toISOString();
+    const lines = fs.readFileSync(SYNC_BC_LOG_FILE, 'utf8').split('\n').filter(Boolean);
+    const kept = lines.filter(s => {
+      try { return JSON.parse(s).ts >= cutoff; } catch (_) { return false; }
+    });
+    if (kept.length === lines.length) return;
+    const tmp = SYNC_BC_LOG_FILE + '.tmp';
+    fs.writeFileSync(tmp, kept.length ? kept.join('\n') + '\n' : '');
+    fs.renameSync(tmp, SYNC_BC_LOG_FILE);
+    console.log(`[LOG] BC-write log pruned: ${lines.length - kept.length} line(s) older than ${BC_WRITE_LOG_KEEP_DAYS} days dropped, ${kept.length} kept`);
+  } catch (e) {
+    console.error(`[LOG] BC-write log prune failed: ${e.message}`);
+  }
+}
+let _lastBcLogPrune = 0;
+
+function logBcWrite(productId, variantId, level) {
+  try {
+    const desc = describeVariant(variantId);
+    const line = JSON.stringify({
+      ts: new Date().toISOString(),
+      kind: desc.kind, sku: desc.sku, name: desc.name, size: desc.size,
+      product_id: productId, variant_id: variantId, level: Math.max(0, level)
+    });
+    if (DRY_RUN) {
+      console.log(`  [DRY] would log BC write ${line}`);
+      return;
+    }
+    if (Date.now() - _lastBcLogPrune > 3600000) {   // at most hourly
+      _lastBcLogPrune = Date.now();
+      pruneBcWriteLog();
+    }
+    fs.appendFileSync(SYNC_BC_LOG_FILE, line + '\n');
+  } catch (e) {
+    console.error(`[LOG] BC-write log failed: ${e.message}`);
+  }
+}
+
 /** Update a single BC variant's inventory_level */
 async function setBcVariantStock(productId, variantId, level) {
   await bcPut(`/v3/catalog/products/${productId}/variants/${variantId}`, {
     inventory_level: Math.max(0, level)
   });
+  // Append to the audit log AFTER the PUT succeeds (so failed writes don't
+  // pollute the log).
+  logBcWrite(productId, variantId, level);
 }
 
 // ── Helpers: Brewmaster dropship counts ─────────────────────────────────────
