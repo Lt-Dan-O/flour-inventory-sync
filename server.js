@@ -66,6 +66,10 @@ const SQ_ACCESS_TOKEN = process.env.SQ_ACCESS_TOKEN;
 const SQ_LOCATION_ID  = process.env.SQ_LOCATION_ID || 'D7QJPMPVZME4K';
 const PORT            = process.env.PORT || 3000;
 const RECONCILE_MINS  = parseInt(process.env.RECONCILE_MINS || '15', 10);
+// DRY_RUN=1: read everything, log every BC/Square write instead of sending it.
+const DRY_RUN         = process.env.DRY_RUN === '1';
+// A Brewmaster metafield whose feed date is older than this counts as no Brewmaster stock.
+const BREWMASTER_MAX_AGE_DAYS = parseInt(process.env.BREWMASTER_MAX_AGE_DAYS || '10', 10);
 
 const BC_API = `https://api.bigcommerce.com/stores/${BC_STORE_HASH}`;
 const SQ_API = 'https://connect.squareup.com/v2';
@@ -256,6 +260,10 @@ let _bcPutChain = Promise.resolve();
 async function bcPut(path, body) {
   // Queue this call behind any prior bcPut to guarantee serial order + pacing.
   const run = async () => {
+    if (DRY_RUN) {
+      console.log(`  [DRY] would PUT ${path} ${JSON.stringify(body)}`);
+      return {};
+    }
     const MAX_RETRIES = 5;
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       const res = await fetch(`${BC_API}${path}`, {
@@ -347,6 +355,94 @@ async function setBcVariantStock(productId, variantId, level) {
   await bcPut(`/v3/catalog/products/${productId}/variants/${variantId}`, {
     inventory_level: Math.max(0, level)
   });
+}
+
+// ── Helpers: Brewmaster dropship counts ─────────────────────────────────────
+// Some mill-mapping items (the Buon Vino filter pads, FIL12/16/18/22/23/24) are
+// also in the weekly Brewmaster feed. The weekly push (Operational repo,
+// bc_push_dropship.py) leaves their stock to this service and instead publishes
+// the feed count as a variant metafield brewmaster/ks = {"ks": int, "feed": "MMDDYYYY"}.
+// Dan's rule (2026-10-16): show the Brewmaster count unless Brewmaster is at 0
+// and Square has stock, then show the Square count. A missing metafield, or one
+// whose feed is older than BREWMASTER_MAX_AGE_DAYS, counts as no Brewmaster stock.
+const BM_NAMESPACE = 'brewmaster';
+const BM_KEY = 'ks';
+// Last successful read per BC variant id, used if a later read fails.
+const lastKnownBrewmaster = new Map();
+// Latest source decision per item and recent order decisions, read by daily-report.js.
+const brewmasterSources = new Map();
+const brewmasterOrders = [];
+app.locals.brewmasterSources = brewmasterSources;
+app.locals.brewmasterOrders = brewmasterOrders;
+
+/** Today's date in Eastern Time, as days since epoch */
+function etDayNumber() {
+  const [y, m, d] = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' }).split('-').map(Number);
+  return Date.UTC(y, m - 1, d) / 86400000;
+}
+
+/** Parse a brewmaster/ks metafield into { ks, feed, ageDays, fresh } (null if unusable) */
+function parseBrewmasterMetafield(mf) {
+  if (!mf || mf.namespace !== BM_NAMESPACE || mf.key !== BM_KEY) return null;
+  let v;
+  try { v = JSON.parse(mf.value); } catch (e) { return null; }
+  const ks = Number.isFinite(Number(v.ks)) ? Math.max(0, Math.floor(Number(v.ks))) : null;
+  const m = /^(\d{2})(\d{2})(\d{4})$/.exec(String(v.feed || ''));
+  if (ks === null || !m) return null;
+  const ageDays = etDayNumber() - Date.UTC(+m[3], +m[1] - 1, +m[2]) / 86400000;
+  const fresh = ageDays >= -1 && ageDays <= BREWMASTER_MAX_AGE_DAYS;
+  return { ks, feed: v.feed, ageDays, fresh };
+}
+
+/** One call for every brewmaster/ks variant metafield in the store → Map(variantId → parsed) */
+async function fetchAllBrewmasterKs() {
+  const map = new Map();
+  let page = 1;
+  while (true) {
+    const res = await bcGet(`/v3/catalog/variants/metafields?namespace=${BM_NAMESPACE}&key=${BM_KEY}&limit=250&page=${page}`);
+    for (const mf of res.data || []) {
+      const parsed = parseBrewmasterMetafield(mf);
+      if (parsed) {
+        map.set(mf.resource_id, parsed);
+        lastKnownBrewmaster.set(mf.resource_id, parsed);
+      }
+    }
+    const p = res.meta && res.meta.pagination;
+    if (!p || page >= p.total_pages) break;
+    page++;
+  }
+  // A variant that no longer carries the metafield should not keep its old count.
+  for (const vid of lastKnownBrewmaster.keys()) {
+    if (!map.has(vid)) lastKnownBrewmaster.delete(vid);
+  }
+  return map;
+}
+
+/**
+ * Brewmaster count for one mapped BC variant: { bm, error }.
+ * bm is the parsed metafield, or null when the variant has none.
+ * cache: { map, complete } from a reconcile pass. complete=true means map holds
+ * every brewmaster/ks metafield, so a variant missing from it has none.
+ * If the read fails, falls back to the last successful read of that variant.
+ */
+async function getBrewmasterKs(productId, variantId, cache) {
+  if (cache && cache.map.has(variantId)) return { bm: cache.map.get(variantId) };
+  if (cache && cache.complete) return { bm: null };
+  try {
+    const res = await bcGet(`/v3/catalog/products/${productId}/variants/${variantId}/metafields?namespace=${BM_NAMESPACE}&key=${BM_KEY}`);
+    const bm = parseBrewmasterMetafield((res.data || [])[0]);
+    if (bm) lastKnownBrewmaster.set(variantId, bm); else lastKnownBrewmaster.delete(variantId);
+    if (cache) cache.map.set(variantId, bm);
+    return { bm };
+  } catch (e) {
+    return { bm: lastKnownBrewmaster.get(variantId) || null, error: e.message };
+  }
+}
+
+/** Human-readable description of a Brewmaster read, for logs */
+function describeBrewmaster(bm) {
+  if (!bm) return 'none';
+  return `ks=${bm.ks} (feed ${bm.feed}, ${bm.ageDays}d old${bm.fresh ? '' : ', STALE'})`;
 }
 
 // ── Helpers: Square ─────────────────────────────────────────────────────────
@@ -582,6 +678,11 @@ async function adjustSquareInventory(variationId, adjustment, idempotencyKey) {
     }
   };
 
+  if (DRY_RUN) {
+    console.log(`  [DRY] would adjust Square ${variationId} by ${adjustment}`);
+    return {};
+  }
+
   const res = await fetch(`${SQ_API}/inventory/changes/batch-create`, {
     method: 'POST',
     headers: sqHeaders(),
@@ -612,6 +713,11 @@ async function setSquareInventory(variationId, quantity) {
       occurred_at: new Date().toISOString()
     }
   };
+
+  if (DRY_RUN) {
+    console.log(`  [DRY] would set Square ${variationId} to ${quantity}`);
+    return {};
+  }
 
   const res = await fetch(`${SQ_API}/inventory/changes/batch-create`, {
     method: 'POST',
@@ -870,7 +976,7 @@ async function getReservedUnits() {
   return reserved;
 }
 
-// ── Core: Recalculate mill BC variant from Square truth ───────────────────
+// ── Core: Recalculate mill BC variant from Square (or Brewmaster) ─────────
 async function recalculateMill(millSku, options = {}) {
   const entry = millMapping[millSku];
   if (!entry) {
@@ -890,11 +996,30 @@ async function recalculateMill(millSku, options = {}) {
   const reservedMap = options.reservedUnitsMap || await getReservedUnits();
   const reservedUnits = reservedMap[millSku] || 0;
 
-  const availableUnits = Math.max(0, totalUnits - reservedUnits);
+  // 3. Dan's rule: the Brewmaster count wins unless Brewmaster is at 0 (or its
+  //    metafield is missing/stale), then the Square count.
+  const { bm, error: bmError } = await getBrewmasterKs(entry.bc_product_id, entry.bc_variant_id, options.brewmasterCache);
+  if (bmError) {
+    console.warn(`  [MILL: ${entry.name}] Brewmaster metafield read failed (${bmError}); using ${bm ? 'last known value' : 'Square only'}`);
+  }
+  const source = (bm && bm.fresh && bm.ks > 0) ? 'brewmaster' : 'square';
+  const availableUnits = source === 'brewmaster'
+    ? Math.max(0, bm.ks - reservedUnits)
+    : Math.max(0, totalUnits - reservedUnits);
 
-  console.log(`  [MILL: ${entry.name}] Square=${totalUnits} units, reserved=${reservedUnits}, available=${availableUnits}`);
+  if (bm) {
+    console.log(`  [MILL: ${entry.name}] Square=${totalUnits} units, Brewmaster ${describeBrewmaster(bm)}, reserved=${reservedUnits} → source=${source === 'brewmaster' ? 'Brewmaster' : 'Square'}, available=${availableUnits}`);
+    brewmasterSources.set(millSku, {
+      sku: millSku, name: entry.name, source, target: availableUnits,
+      square: totalUnits, reserved: reservedUnits, ks: bm.ks, feed: bm.feed, fresh: bm.fresh,
+      at: new Date().toISOString()
+    });
+  } else {
+    console.log(`  [MILL: ${entry.name}] Square=${totalUnits} units, reserved=${reservedUnits}, available=${availableUnits}`);
+    brewmasterSources.delete(millSku);
+  }
 
-  // 3. Set BC variant stock (1:1 sync) — only log success if the PUT actually succeeds.
+  // 4. Set BC variant stock (1:1 sync) — only log success if the PUT actually succeeds.
   try {
     await setBcVariantStock(entry.bc_product_id, entry.bc_variant_id, availableUnits);
     console.log(`  [MILL: ${entry.name}] BC updated: ${availableUnits}`);
@@ -902,6 +1027,7 @@ async function recalculateMill(millSku, options = {}) {
     console.error(`    ERROR setting mill (vid ${entry.bc_variant_id}): ${e.message}`);
     console.error(`  [MILL: ${entry.name}] BC NOT updated (target was ${availableUnits})`);
   }
+  return { source, target: availableUnits, brewmaster: bm };
 }
 
 /** Fetch all pending/unshipped BC orders and sum reserved oz per hops SKU */
@@ -1220,6 +1346,27 @@ app.post('/webhooks/order-created', async (req, res) => {
         const unitsToDeduct = item.quantity;
         const entry = millMapping[millLookup.millSku];
 
+        // Items Brewmaster has in stock are dropshipped, so the shop shelf (Square)
+        // is only drawn down when Brewmaster is at 0 or its count is missing/stale.
+        const { bm, error: bmError } = await getBrewmasterKs(entry.bc_product_id, entry.bc_variant_id);
+        if (bmError) {
+          console.warn(`  mill SKU ${item.sku}: Brewmaster metafield read failed (${bmError}); using ${bm ? 'last known value' : 'Square only'}`);
+        }
+        if (bm) {
+          const dropship = bm.fresh && bm.ks > 0;
+          brewmasterOrders.push({
+            ts: new Date().toISOString(), orderId, sku: millLookup.millSku, name: entry.name,
+            qty: item.quantity, source: dropship ? 'brewmaster' : 'square', ks: bm.ks, feed: bm.feed
+          });
+          if (brewmasterOrders.length > 500) brewmasterOrders.splice(0, brewmasterOrders.length - 500);
+          if (dropship) {
+            console.log(`  mill SKU ${item.sku} x${item.quantity} → Brewmaster dropship, ${describeBrewmaster(bm)}; Square shelf untouched`);
+            affectedMills.add(millLookup.millSku);
+            continue;
+          }
+          console.log(`  mill SKU ${item.sku}: Brewmaster ${describeBrewmaster(bm)} → fulfilled from shelf`);
+        }
+
         console.log(`  mill SKU ${item.sku} x${item.quantity} = ${unitsToDeduct} unit(s) → deduct from Square`);
 
         try {
@@ -1514,13 +1661,32 @@ async function fullReconciliation() {
     let millErrors = 0;
     const zeroMillItems = [];
 
+    // Brewmaster counts for this pass: one batch read, shared by every item and the retry pass.
+    const brewmasterCache = { map: new Map(), complete: false };
+    try {
+      brewmasterCache.map = await fetchAllBrewmasterKs();
+      brewmasterCache.complete = true;
+      console.log(`Brewmaster metafields: ${brewmasterCache.map.size} variant(s) carry ${BM_NAMESPACE}/${BM_KEY}`);
+      // Only mill items apply the rule; flag a metafield on any other variant this service writes.
+      for (const vid of brewmasterCache.map.keys()) {
+        if (bcVariantToMill[vid]) continue;
+        const other = bcVariantToGrain[vid] ? 'grain/flour' : bcVariantToCoffee[vid] ? 'coffee'
+          : bcVariantToBrewGrain[vid] ? 'brewing grain' : bcVariantToHops[vid] ? 'hops' : null;
+        if (other) console.warn(`  WARNING: ${other} variant ${vid} carries ${BM_NAMESPACE}/${BM_KEY}, but only mill items apply the Brewmaster rule`);
+      }
+    } catch (e) {
+      console.error(`  Brewmaster metafield batch read failed (${e.message}); reading per item`);
+    }
+    const millSources = [];
+
     for (const millSku of Object.keys(millMapping)) {
       try {
         const entry = millMapping[millSku];
         const sqCount = bulkCounts.has(entry.square_variation_id)
           ? bulkCounts.get(entry.square_variation_id)
           : null;
-        await recalculateMill(millSku, { reservedUnitsMap, bulkCounts });
+        const result = await recalculateMill(millSku, { reservedUnitsMap, bulkCounts, brewmasterCache });
+        if (result && result.brewmaster) millSources.push(`${millSku}=${result.target} (${result.source === 'brewmaster' ? 'Brewmaster' : 'Square'})`);
         millProcessed++;
         if (sqCount === null || sqCount === 0) {
           zeroMillItems.push(millSku);
@@ -1534,6 +1700,9 @@ async function fullReconciliation() {
     }
 
     console.log(`Mill reconciliation complete: ${millProcessed} OK, ${millErrors} errors`);
+    if (millSources.length > 0) {
+      console.log(`Brewmaster rule (${millSources.length} item(s)): ${millSources.join(', ')}`);
+    }
 
     // ── Brewing grain bag-to-bulk correction ──────────────────────────────
     console.log(`\n--- Brewing Grain Bag-to-Bulk Correction ---`);
@@ -1710,7 +1879,7 @@ async function fullReconciliation() {
                 if (qty > 0) {
                   console.log(`  Mill retry: ${entry.name} recovered Square=${qty} units`);
                   const fixedCounts = new Map([[entry.square_variation_id, qty]]);
-                  await recalculateMill(millSku, { reservedUnitsMap, bulkCounts: fixedCounts });
+                  await recalculateMill(millSku, { reservedUnitsMap, bulkCounts: fixedCounts, brewmasterCache });
                 }
               }
             }
@@ -2076,6 +2245,16 @@ app.get('/audit/option-orphans', async (req, res) => {
 });
 
 // ── Debug endpoint: dump in-memory mapping + test Square call for problem SKUs
+// Which source (Brewmaster or Square) each Brewmaster-tracked item used in its
+// latest recalculation, plus recent BC order decisions (dropship vs shelf).
+app.get('/debug/brewmaster', (req, res) => {
+  res.json({
+    max_age_days: BREWMASTER_MAX_AGE_DAYS,
+    items: [...brewmasterSources.values()],
+    recent_orders: brewmasterOrders.slice(-50)
+  });
+});
+
 app.get('/debug/mapping-check', async (req, res) => {
   const skus = req.query.skus ? req.query.skus.split(',') : ['974842J', 'Z042202', 'A819863'];
   const results = {};
@@ -2289,12 +2468,15 @@ app.listen(PORT, async () => {
   console.log(`   Brewing grain mappings: ${Object.keys(brewGrainMapping).length}`);
   console.log(`   Hops mappings: ${Object.keys(hopsMapping).length}`);
   console.log(`   Reconciliation interval: ${RECONCILE_MINS} minutes`);
+  console.log(`   Brewmaster counts older than ${BREWMASTER_MAX_AGE_DAYS} days fall back to Square`);
+  if (DRY_RUN) console.log(`   DRY_RUN: BC and Square writes are logged, not sent`);
   console.log(`\n   Endpoints:`);
   console.log(`     POST /webhooks/order-created      (BC order webhook)`);
   console.log(`     POST /webhooks/square-inventory    (Square inventory webhook)`);
   console.log(`     GET  /reconcile                    (trigger full reconciliation)`);
   console.log(`     POST /reconcile                    (trigger full reconciliation)`);
-  console.log(`     GET  /health                       (health check)\n`);
+  console.log(`     GET  /health                       (health check)`);
+  console.log(`     GET  /debug/brewmaster             (Brewmaster vs Square source per item)\n`);
 
   // Auto-discover flour variant IDs from BigCommerce
   await discoverFlourVariants();

@@ -89,6 +89,9 @@ async function sendEmail(to, subject, body) {
   return res.json();
 }
 
+// Express app from server.js; app.locals carries the Brewmaster-vs-Square decisions.
+let appRef = null;
+
 // ── Load mapping files for product name lookups ────────────────────────────
 let grainMapping = {}, coffeeMapping = {}, millMapping = {}, brewGrainMapping = {}, hopsMapping = {};
 try { grainMapping     = require('./grain-mapping.json');          } catch (e) {}
@@ -469,6 +472,31 @@ async function generateAndSendReport(opts = {}) {
       }
     }
 
+    // Section C — Brewmaster vs Square for items in the Brewmaster feed.
+    // Dan's rule: BC shows the Brewmaster count unless Brewmaster is at 0 (or its
+    // count is stale), then the Square count. server.js records each decision.
+    const bmSources = appRef && appRef.locals.brewmasterSources;
+    const bmOrders = ((appRef && appRef.locals.brewmasterOrders) || [])
+      .filter(o => o.ts >= after && o.ts < before);
+    if (bmSources && bmSources.size > 0) {
+      lines.push('');
+      lines.push('=== Brewmaster vs Square ===');
+      lines.push('(Brewmaster count unless Brewmaster is at 0 or stale, then Square)');
+      for (const s of [...bmSources.values()].sort((a, b) => a.sku.localeCompare(b.sku))) {
+        const won = s.source === 'brewmaster' ? 'Brewmaster' : 'Square';
+        lines.push(`  ${s.sku.padEnd(6)} BC ${String(s.target).padStart(4)} from ${won.padEnd(10)}` +
+                   ` (Brewmaster ${s.ks}, feed ${s.feed}${s.fresh ? '' : ' STALE'}; Square ${s.square}; reserved ${s.reserved})`);
+      }
+      if (bmOrders.length > 0) {
+        lines.push('');
+        lines.push(`  -- Online orders (${bmOrders.length}) --`);
+        for (const o of bmOrders) {
+          lines.push(`    #${o.orderId} ${o.sku} x${o.qty}: ` +
+                     (o.source === 'brewmaster' ? 'Brewmaster dropship (Square untouched)' : 'from shelf (Square deducted)'));
+        }
+      }
+    }
+
     lines.push('');
     lines.push(`(${otherCount} other Square change(s) from POS/Dashboard excluded from sync section)`);
 
@@ -512,6 +540,7 @@ function startScheduler() {
 
 // ── Export ──────────────────────────────────────────────────────────────────
 module.exports = function (app) {
+  appRef = app;
   // Manual trigger endpoints. By default they respect today's dedup so an
   // external pinger or a Render Cron Job hitting these endpoints won't
   // produce a second copy of the daily email. Pass ?force=1 to re-send.
